@@ -42,6 +42,11 @@
 <body class="min-h-screen pb-16 antialiased">
   <div class="max-w-md mx-auto px-3.5 pt-4 space-y-3.5">
 
+    <!-- 保存成功トースト通知 -->
+    <div id="save-toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-1.5">
+      <span>✅</span> <span>株式割合を保存しました！次回も自動で復元されます</span>
+    </div>
+
     <!-- 1. ミニマルヘッダー -->
     <header class="flex items-center justify-between pb-2.5 border-b border-slate-800/80">
       <div class="flex items-center gap-1.5">
@@ -49,7 +54,7 @@
         <h1 class="text-base font-bold text-white tracking-tight">ドローダウン監視</h1>
       </div>
       <div class="flex items-center gap-2">
-        <span class="text-[11px] font-mono text-slate-400">11/07 18:15 更新</span>
+        <span class="text-[11px] font-mono text-slate-400">11/07 18:20 更新</span>
         <button onclick="location.reload()" class="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 active:scale-95 transition" title="更新">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
         </button>
@@ -73,7 +78,10 @@
 
       <!-- 巨大下落率メインカード -->
       <div class="bg-gradient-to-b from-slate-900 to-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl text-center space-y-2">
-        <div class="text-[11px] text-slate-400 font-medium">あなたの株式資産全体の下落率（ATH基準）</div>
+        <div class="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+          <span>あなたの株式資産全体の下落率</span>
+          <span id="current-slot-badge" class="bg-blue-950 text-blue-300 px-2 py-0.5 rounded font-mono text-[10px] border border-blue-800/60">パターン1</span>
+        </div>
         
         <div id="pf-total-drawdown" class="text-5xl font-black font-mono tracking-tight my-1 text-emerald-400">
           --%
@@ -108,37 +116,68 @@
           <div id="pf-allocation-summary" class="flex flex-wrap gap-1 font-mono text-[11px]">
             <!-- JSでバッジ生成 -->
           </div>
-          <button onclick="togglePortfolioEdit()" class="text-[11px] text-blue-400 hover:text-blue-300 font-semibold shrink-0 ml-1">
-            ⚙️ 配分を変更
+          <button onclick="togglePortfolioEdit()" class="text-[11px] text-blue-400 hover:text-blue-300 font-bold shrink-0 ml-1 bg-slate-800 px-2 py-1 rounded-lg border border-slate-700">
+            ⚙️ 割合を変更・保存
           </button>
         </div>
       </div>
 
-      <!-- 配分編集エリア（折りたたみ） -->
-      <div id="pf-edit-panel" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
-        <div class="flex items-center justify-between pb-1.5 border-b border-slate-800">
-          <span class="text-xs font-bold text-white flex items-center gap-1">
-            <span>⚙️</span> 保有割合の編集
-          </span>
+      <!-- 配分編集エリア（★保存機能＆複数パターン保存スロット対応！） -->
+      <div id="pf-edit-panel" class="hidden bg-slate-900 border-2 border-blue-500/50 rounded-2xl p-4 space-y-3.5 shadow-2xl">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div>
+            <div class="text-xs font-bold text-white flex items-center gap-1.5">
+              <span>⚙️</span> <strong>保有割合の設定 ＆ 保存</strong>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5">数値を入力して「保存」を押すとスマホに記憶されます</div>
+          </div>
+          <button onclick="togglePortfolioEdit()" class="text-xs text-slate-400 hover:text-white px-2 py-1">
+            ✕ 閉じる
+          </button>
+        </div>
+
+        <!-- パターンスロット切り替え（最大3パターン保存可能！） -->
+        <div class="space-y-1">
+          <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">保存パターンの切り替え:</div>
+          <div class="grid grid-cols-3 gap-1.5 text-xs font-bold">
+            <button id="slot-btn-1" onclick="switchSlot(1)" class="py-1 rounded-lg border transition bg-blue-600 text-white border-blue-500">パターン1</button>
+            <button id="slot-btn-2" onclick="switchSlot(2)" class="py-1 rounded-lg border transition bg-slate-950 text-slate-400 border-slate-800">パターン2</button>
+            <button id="slot-btn-3" onclick="switchSlot(3)" class="py-1 rounded-lg border transition bg-slate-950 text-slate-400 border-slate-800">パターン3</button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <span class="text-xs text-slate-300 font-bold">銘柄と割合（%）:</span>
           <div class="flex items-center gap-1.5">
-            <button onclick="normalizeWeights()" class="text-[10px] bg-slate-800 text-blue-400 px-2 py-0.5 rounded font-medium">
-              100%に調整
+            <button onclick="normalizeWeights()" class="text-[10px] bg-slate-800 text-blue-300 px-2 py-0.5 rounded border border-slate-700">
+              合計100%に調整
             </button>
-            <button onclick="addPortfolioRow()" class="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded font-medium">
-              ＋ 追加
+            <button onclick="addPortfolioRow()" class="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold">
+              ＋ 銘柄追加
             </button>
           </div>
         </div>
 
+        <!-- 銘柄行リスト -->
         <div id="portfolio-rows-container" class="space-y-2">
           <!-- JSでレンダリング -->
         </div>
 
-        <div class="flex justify-between items-center text-xs text-slate-400 pt-2 border-t border-slate-800">
-          <div>合計: <span id="pf-total-weight" class="font-bold font-mono text-white">100%</span></div>
-          <button onclick="togglePortfolioEdit()" class="text-xs bg-slate-800 text-slate-200 px-3 py-0.5 rounded font-medium">
-            完了
+        <div class="flex justify-between items-center text-xs text-slate-300 pt-2 border-t border-slate-800">
+          <div>割合合計: <span id="pf-total-weight" class="font-bold font-mono text-white text-sm">100%</span></div>
+          <div class="text-[10px] text-slate-500">※100%推奨</div>
+        </div>
+
+        <!-- ★ メインの保存ボタン！ -->
+        <div class="pt-1">
+          <button onclick="saveAndApplyPortfolio()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-1.5">
+            <span>💾</span> <strong>この割合をスマホに保存する</strong>
           </button>
+        </div>
+
+        <div class="text-[10px] text-slate-400 text-center leading-relaxed">
+          ※保存すると、ブラウザを閉じても次回開いたときにこの割合で自動復元されます。<br>
+          （※Safariの通常タブでご利用ください）
         </div>
       </div>
 
@@ -164,11 +203,10 @@
     </div>
 
     <!-- ============================================================== -->
-    <!-- タブB: 指数一覧（★選択したものだけ表示可能！） -->
+    <!-- タブB: 指数一覧（選択したものだけ表示） -->
     <!-- ============================================================== -->
     <div id="tab-content-stocks" class="hidden space-y-3">
 
-      <!-- 表示フィルターバー -->
       <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 rounded-xl p-2.5">
         <div class="text-xs text-slate-300 font-medium">
           表示中: <strong id="visible-stocks-count" class="text-blue-400 font-mono font-bold">4</strong> 銘柄
@@ -178,7 +216,7 @@
         </button>
       </div>
 
-      <!-- 銘柄選択・チェックボックスパネル（折りたたみモーダル風） -->
+      <!-- 銘柄選択パネル -->
       <div id="stock-selector-panel" class="hidden bg-slate-900 border-2 border-blue-500/40 rounded-2xl p-3.5 space-y-3 shadow-2xl">
         <div class="flex items-center justify-between pb-2 border-b border-slate-800">
           <div>
@@ -192,7 +230,6 @@
           </button>
         </div>
 
-        <!-- クイック選択プリセットボタン -->
         <div class="flex flex-wrap gap-1.5 text-[11px] pt-0.5">
           <button onclick="selectPreset('main')" class="bg-slate-800 hover:bg-slate-700 text-blue-300 px-2 py-0.5 rounded border border-slate-700">
             主要4銘柄のみ
@@ -208,37 +245,42 @@
           </button>
         </div>
 
-        <!-- チェックボックス一覧（カテゴリ別） -->
-        <div id="stock-checkbox-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1 text-xs">
-          <!-- JSで動的生成 -->
-        </div>
+        <div id="stock-checkbox-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1 text-xs"></div>
       </div>
 
-      <!-- 選択された銘柄カード一覧 -->
-      <div id="all-stocks-list" class="space-y-2.5">
-        <!-- JSでレンダリング -->
-      </div>
+      <div id="all-stocks-list" class="space-y-2.5"></div>
 
     </div>
 
   </div>
 
   <script>
-    const STOCKS = [{"ticker": "ACWI", "name": "オルカン (MSCI ACWI / 全世界株)", "category": "全世界・全米", "current_price": 152.37, "ath": 162.8, "ath_date": "2026-08-13", "drawdown_pct": 6.41, "drop_amount": 10.43, "currency": "USD", "updated_at": "2026-11-07 18:14:56"}, {"ticker": "VT", "name": "VT (バンガード・トータル・ワールド)", "category": "全世界・全米", "current_price": 151.73, "ath": 162.29, "ath_date": "2026-08-14", "drawdown_pct": 6.51, "drop_amount": 10.56, "currency": "USD", "updated_at": "2026-11-07 18:14:56"}, {"ticker": "VOO", "name": "S&P 500 (バンガード VOO)", "category": "全世界・全米", "current_price": 675.99, "ath": 718.47, "ath_date": "2026-10-06", "drawdown_pct": 5.91, "drop_amount": 42.48, "currency": "USD", "updated_at": "2026-11-07 18:14:56"}, {"ticker": "SPY", "name": "S&P 500 (SPDR SPY)", "category": "全世界・全米", "current_price": 735.29, "ath": 781.62, "ath_date": "2026-10-06", "drawdown_pct": 5.93, "drop_amount": 46.33, "currency": "USD", "updated_at": "2026-11-07 18:14:57"}, {"ticker": "VTI", "name": "全米株式 (バンガード VTI)", "category": "全世界・全米", "current_price": 361.93, "ath": 384.15, "ath_date": "2026-08-13", "drawdown_pct": 5.78, "drop_amount": 22.22, "currency": "USD", "updated_at": "2026-11-07 18:14:57"}, {"ticker": "QQQ", "name": "Nasdaq 100 (Invesco QQQ)", "category": "ハイテク・グロース", "current_price": 656.1, "ath": 762.86, "ath_date": "2026-10-06", "drawdown_pct": 13.99, "drop_amount": 106.76, "currency": "USD", "updated_at": "2026-11-07 18:14:57"}, {"ticker": "DIA", "name": "NYダウ (SPDR ダウ工業株30)", "category": "全世界・全米", "current_price": 512.22, "ath": 544.92, "ath_date": "2026-08-05", "drawdown_pct": 6.0, "drop_amount": 32.7, "currency": "USD", "updated_at": "2026-11-07 18:14:57"}, {"ticker": "FNGS", "name": "FANG+ (MicroSectors FANG+ ETN)", "category": "ハイテク・グロース", "current_price": 72.58, "ath": 84.95, "ath_date": "2026-10-08", "drawdown_pct": 14.56, "drop_amount": 12.37, "currency": "USD", "updated_at": "2026-11-07 18:14:56"}, {"ticker": "SOXX", "name": "半導体株 (iShares SOX指数)", "category": "ハイテク・グロース", "current_price": 136.53, "ath": 218.51, "ath_date": "2026-06-22", "drawdown_pct": 37.52, "drop_amount": 81.98, "currency": "USD", "updated_at": "2026-11-07 18:14:57"}, {"ticker": "SMH", "name": "半導体株 (VanEck 半導体ETF)", "category": "ハイテク・グロース", "current_price": 463.96, "ath": 671.83, "ath_date": "2026-06-22", "drawdown_pct": 30.94, "drop_amount": 207.87, "currency": "USD", "updated_at": "2026-11-07 18:14:57"}, {"ticker": "VYM", "name": "米国高配当株 (バンガード VYM)", "category": "配当・バリュー", "current_price": 159.08, "ath": 166.68, "ath_date": "2026-08-13", "drawdown_pct": 4.56, "drop_amount": 7.6, "currency": "USD", "updated_at": "2026-11-07 18:14:57"}, {"ticker": "HDV", "name": "米国高配当株 (iShares HDV)", "category": "配当・バリュー", "current_price": 30.35, "ath": 31.43, "ath_date": "2026-11-05", "drawdown_pct": 3.44, "drop_amount": 1.08, "currency": "USD", "updated_at": "2026-11-07 18:14:57"}, {"ticker": "SPYD", "name": "SPYD (S&P500 高配当ETF)", "category": "配当・バリュー", "current_price": 49.41, "ath": 51.1, "ath_date": "2026-11-05", "drawdown_pct": 3.32, "drop_amount": 1.69, "currency": "USD", "updated_at": "2026-11-07 18:14:58"}, {"ticker": "EPI", "name": "インド株 (WisdomTree India)", "category": "新興国", "current_price": 43.44, "ath": 50.86, "ath_date": "2024-09-26", "drawdown_pct": 14.58, "drop_amount": 7.42, "currency": "USD", "updated_at": "2026-11-07 18:14:58"}, {"ticker": "VWO", "name": "新興国株 (バンガード VWO)", "category": "新興国", "current_price": 55.29, "ath": 61.42, "ath_date": "2026-09-04", "drawdown_pct": 9.98, "drop_amount": 6.13, "currency": "USD", "updated_at": "2026-11-07 18:14:58"}, {"ticker": "QLD", "name": "レバナス (ProShares Ultra QQQ 2倍)", "category": "レバレッジ", "current_price": 74.11, "ath": 101.62, "ath_date": "2026-10-06", "drawdown_pct": 27.07, "drop_amount": 27.51, "currency": "USD", "updated_at": "2026-11-07 18:14:58"}, {"ticker": "TQQQ", "name": "TQQQ (ProShares UltraPro QQQ 3倍)", "category": "レバレッジ", "current_price": 52.25, "ath": 87.72, "ath_date": "2026-06-03", "drawdown_pct": 40.43, "drop_amount": 35.47, "currency": "USD", "updated_at": "2026-11-07 18:14:58"}, {"ticker": "NVDA", "name": "エヌビディア (NVIDIA)", "category": "個別株", "current_price": 186.64, "ath": 243.37, "ath_date": "2026-10-06", "drawdown_pct": 23.31, "drop_amount": 56.73, "currency": "USD", "updated_at": "2026-11-07 18:14:59"}, {"ticker": "AAPL", "name": "アップル (Apple)", "category": "個別株", "current_price": 342.37, "ath": 355.38, "ath_date": "2026-11-05", "drawdown_pct": 3.66, "drop_amount": 13.01, "currency": "USD", "updated_at": "2026-11-07 18:15:00"}, {"ticker": "MSFT", "name": "マイクロソフト (Microsoft)", "category": "個別株", "current_price": 530.61, "ath": 559.15, "ath_date": "2026-11-04", "drawdown_pct": 5.1, "drop_amount": 28.54, "currency": "USD", "updated_at": "2026-11-07 18:15:00"}, {"ticker": "AMZN", "name": "アマゾン (Amazon)", "category": "個別株", "current_price": 259.3, "ath": 287.2, "ath_date": "2026-08-03", "drawdown_pct": 9.71, "drop_amount": 27.9, "currency": "USD", "updated_at": "2026-11-07 18:14:59"}, {"ticker": "GOOGL", "name": "アルファベット / Google", "category": "個別株", "current_price": 284.78, "ath": 408.1, "ath_date": "2026-05-18", "drawdown_pct": 30.22, "drop_amount": 123.32, "currency": "USD", "updated_at": "2026-11-07 18:14:59"}, {"ticker": "META", "name": "メタ (Meta)", "category": "個別株", "current_price": 610.15, "ath": 793.02, "ath_date": "2025-08-15", "drawdown_pct": 23.06, "drop_amount": 182.87, "currency": "USD", "updated_at": "2026-11-07 18:14:59"}, {"ticker": "TSLA", "name": "テスラ (Tesla)", "category": "個別株", "current_price": 358.22, "ath": 498.83, "ath_date": "2025-12-22", "drawdown_pct": 28.19, "drop_amount": 140.61, "currency": "USD", "updated_at": "2026-11-07 18:15:00"}];
+    const STOCKS = [{"ticker": "ACWI", "name": "オルカン (MSCI ACWI / 全世界株)", "category": "全世界・全米", "current_price": 152.37, "ath": 162.8, "ath_date": "2026-08-13", "drawdown_pct": 6.41, "drop_amount": 10.43, "currency": "USD", "updated_at": "2026-11-07 18:19:59"}, {"ticker": "VT", "name": "VT (バンガード・トータル・ワールド)", "category": "全世界・全米", "current_price": 151.73, "ath": 162.29, "ath_date": "2026-08-14", "drawdown_pct": 6.51, "drop_amount": 10.56, "currency": "USD", "updated_at": "2026-11-07 18:19:59"}, {"ticker": "VOO", "name": "S&P 500 (バンガード VOO)", "category": "全世界・全米", "current_price": 675.99, "ath": 718.47, "ath_date": "2026-10-06", "drawdown_pct": 5.91, "drop_amount": 42.48, "currency": "USD", "updated_at": "2026-11-07 18:19:59"}, {"ticker": "SPY", "name": "S&P 500 (SPDR SPY)", "category": "全世界・全米", "current_price": 735.29, "ath": 781.62, "ath_date": "2026-10-06", "drawdown_pct": 5.93, "drop_amount": 46.33, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "VTI", "name": "全米株式 (バンガード VTI)", "category": "全世界・全米", "current_price": 361.93, "ath": 384.15, "ath_date": "2026-08-13", "drawdown_pct": 5.78, "drop_amount": 22.22, "currency": "USD", "updated_at": "2026-11-07 18:19:59"}, {"ticker": "QQQ", "name": "Nasdaq 100 (Invesco QQQ)", "category": "ハイテク・グロース", "current_price": 656.1, "ath": 762.86, "ath_date": "2026-10-06", "drawdown_pct": 13.99, "drop_amount": 106.76, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "DIA", "name": "NYダウ (SPDR ダウ工業株30)", "category": "全世界・全米", "current_price": 512.22, "ath": 544.92, "ath_date": "2026-08-05", "drawdown_pct": 6.0, "drop_amount": 32.7, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "FNGS", "name": "FANG+ (MicroSectors FANG+ ETN)", "category": "ハイテク・グロース", "current_price": 72.58, "ath": 84.95, "ath_date": "2026-10-08", "drawdown_pct": 14.56, "drop_amount": 12.37, "currency": "USD", "updated_at": "2026-11-07 18:19:58"}, {"ticker": "SOXX", "name": "半導体株 (iShares SOX指数)", "category": "ハイテク・グロース", "current_price": 136.53, "ath": 218.51, "ath_date": "2026-06-22", "drawdown_pct": 37.52, "drop_amount": 81.98, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "SMH", "name": "半導体株 (VanEck 半導体ETF)", "category": "ハイテク・グロース", "current_price": 463.96, "ath": 671.83, "ath_date": "2026-06-22", "drawdown_pct": 30.94, "drop_amount": 207.87, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "VYM", "name": "米国高配当株 (バンガード VYM)", "category": "配当・バリュー", "current_price": 159.08, "ath": 166.68, "ath_date": "2026-08-13", "drawdown_pct": 4.56, "drop_amount": 7.6, "currency": "USD", "updated_at": "2026-11-07 18:20:01"}, {"ticker": "HDV", "name": "米国高配当株 (iShares HDV)", "category": "配当・バリュー", "current_price": 30.35, "ath": 31.43, "ath_date": "2026-11-05", "drawdown_pct": 3.44, "drop_amount": 1.08, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "SPYD", "name": "SPYD (S&P500 高配当ETF)", "category": "配当・バリュー", "current_price": 49.41, "ath": 51.1, "ath_date": "2026-11-05", "drawdown_pct": 3.32, "drop_amount": 1.69, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "EPI", "name": "インド株 (WisdomTree India)", "category": "新興国", "current_price": 43.44, "ath": 50.86, "ath_date": "2024-09-26", "drawdown_pct": 14.58, "drop_amount": 7.42, "currency": "USD", "updated_at": "2026-11-07 18:20:01"}, {"ticker": "VWO", "name": "新興国株 (バンガード VWO)", "category": "新興国", "current_price": 55.29, "ath": 61.42, "ath_date": "2026-09-04", "drawdown_pct": 9.98, "drop_amount": 6.13, "currency": "USD", "updated_at": "2026-11-07 18:20:01"}, {"ticker": "QLD", "name": "レバナス (ProShares Ultra QQQ 2倍)", "category": "レバレッジ", "current_price": 74.11, "ath": 101.62, "ath_date": "2026-10-06", "drawdown_pct": 27.07, "drop_amount": 27.51, "currency": "USD", "updated_at": "2026-11-07 18:20:01"}, {"ticker": "TQQQ", "name": "TQQQ (ProShares UltraPro QQQ 3倍)", "category": "レバレッジ", "current_price": 52.25, "ath": 87.72, "ath_date": "2026-06-03", "drawdown_pct": 40.43, "drop_amount": 35.47, "currency": "USD", "updated_at": "2026-11-07 18:20:01"}, {"ticker": "NVDA", "name": "エヌビディア (NVIDIA)", "category": "個別株", "current_price": 186.64, "ath": 243.37, "ath_date": "2026-10-06", "drawdown_pct": 23.31, "drop_amount": 56.73, "currency": "USD", "updated_at": "2026-11-07 18:20:02"}, {"ticker": "AAPL", "name": "アップル (Apple)", "category": "個別株", "current_price": 342.37, "ath": 355.38, "ath_date": "2026-11-05", "drawdown_pct": 3.66, "drop_amount": 13.01, "currency": "USD", "updated_at": "2026-11-07 18:20:03"}, {"ticker": "MSFT", "name": "マイクロソフト (Microsoft)", "category": "個別株", "current_price": 530.61, "ath": 559.15, "ath_date": "2026-11-04", "drawdown_pct": 5.1, "drop_amount": 28.54, "currency": "USD", "updated_at": "2026-11-07 18:20:03"}, {"ticker": "AMZN", "name": "アマゾン (Amazon)", "category": "個別株", "current_price": 259.3, "ath": 287.2, "ath_date": "2026-08-03", "drawdown_pct": 9.71, "drop_amount": 27.9, "currency": "USD", "updated_at": "2026-11-07 18:20:02"}, {"ticker": "GOOGL", "name": "アルファベット / Google", "category": "個別株", "current_price": 284.78, "ath": 408.1, "ath_date": "2026-05-18", "drawdown_pct": 30.22, "drop_amount": 123.32, "currency": "USD", "updated_at": "2026-11-07 18:20:02"}, {"ticker": "META", "name": "メタ (Meta)", "category": "個別株", "current_price": 610.15, "ath": 793.02, "ath_date": "2025-08-15", "drawdown_pct": 23.06, "drop_amount": 182.87, "currency": "USD", "updated_at": "2026-11-07 18:20:03"}, {"ticker": "TSLA", "name": "テスラ (Tesla)", "category": "個別株", "current_price": 358.22, "ath": 498.83, "ath_date": "2025-12-22", "drawdown_pct": 28.19, "drop_amount": 140.61, "currency": "USD", "updated_at": "2026-11-07 18:20:03"}];
 
-    let userPortfolio = [
-      { ticker: "ACWI", weight: 70 },
-      { ticker: "FNGS", weight: 30 }
-    ];
+    // スロット管理（最大3パターン）
+    let currentSlot = 1;
+    let portfolioSlots = {
+      1: [{ ticker: "ACWI", weight: 70 }, { ticker: "FNGS", weight: 30 }],
+      2: [{ ticker: "VOO", weight: 50 }, { ticker: "QQQ", weight: 50 }],
+      3: [{ ticker: "ACWI", weight: 100 }]
+    };
 
     let customThresholds = {};
-
-    // ★ 選択した銘柄リスト（デフォルト: 主要4銘柄のみに初期化！）
     let visibleTickers = ["ACWI", "QQQ", "FNGS", "VOO"];
 
+    // LocalStorageから復元
     try {
-      const savedPf = localStorage.getItem("user_drawdown_portfolio");
-      if (savedPf) userPortfolio = JSON.parse(savedPf);
+      const savedSlot = localStorage.getItem("user_active_slot");
+      if (savedSlot) currentSlot = parseInt(savedSlot) || 1;
+
+      const savedSlots = localStorage.getItem("user_portfolio_slots_v2");
+      if (savedSlots) {
+        portfolioSlots = JSON.parse(savedSlots);
+      } else {
+        // 旧バージョンのポートフォリオがあれば移行
+        const oldPf = localStorage.getItem("user_drawdown_portfolio");
+        if (oldPf) portfolioSlots[1] = JSON.parse(oldPf);
+      }
 
       const savedTh = localStorage.getItem("user_custom_thresholds");
       if (savedTh) customThresholds = JSON.parse(savedTh);
@@ -246,11 +288,53 @@
       const savedVisible = localStorage.getItem("user_visible_tickers_list");
       if (savedVisible) {
         const parsed = JSON.parse(savedVisible);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          visibleTickers = parsed;
-        }
+        if (Array.isArray(parsed) && parsed.length > 0) visibleTickers = parsed;
       }
     } catch(e) {}
+
+    // 現在のアクティブなポートフォリオ参照
+    function getActivePortfolio() {
+      return portfolioSlots[currentSlot] || portfolioSlots[1];
+    }
+
+    function showSaveToast() {
+      const toast = document.getElementById("save-toast");
+      toast.classList.remove("opacity-0", "pointer-events-none");
+      toast.classList.add("opacity-100");
+      setTimeout(() => {
+        toast.classList.remove("opacity-100");
+        toast.classList.add("opacity-0", "pointer-events-none");
+      }, 2500);
+    }
+
+    function saveAndApplyPortfolio() {
+      try {
+        localStorage.setItem("user_portfolio_slots_v2", JSON.stringify(portfolioSlots));
+        localStorage.setItem("user_active_slot", currentSlot.toString());
+      } catch(e) {}
+      
+      calculatePortfolioTotal();
+      showSaveToast();
+      togglePortfolioEdit(); // 編集パネルを閉じる
+    }
+
+    function switchSlot(slotNum) {
+      currentSlot = slotNum;
+      for (let i = 1; i <= 3; i++) {
+        const btn = document.getElementById(`slot-btn-${i}`);
+        if (i === slotNum) {
+          btn.className = "py-1 rounded-lg border transition bg-blue-600 text-white border-blue-500";
+        } else {
+          btn.className = "py-1 rounded-lg border transition bg-slate-950 text-slate-400 border-slate-800";
+        }
+      }
+      document.getElementById("current-slot-badge").textContent = `パターン${slotNum}`;
+      renderPortfolioRows();
+      calculatePortfolioTotal();
+      try {
+        localStorage.setItem("user_active_slot", currentSlot.toString());
+      } catch(e) {}
+    }
 
     function saveVisibleTickers() {
       try {
@@ -317,9 +401,6 @@
       }
     }
 
-    // ==============================================================
-    // 銘柄選択・チェックボックス機能
-    // ==============================================================
     function renderCheckboxList() {
       const container = document.getElementById("stock-checkbox-list");
       container.innerHTML = "";
@@ -373,7 +454,7 @@
       if (type === "main") {
         visibleTickers = ["ACWI", "QQQ", "FNGS", "VOO"];
       } else if (type === "portfolio") {
-        visibleTickers = userPortfolio.map(p => p.ticker);
+        visibleTickers = getActivePortfolio().map(p => p.ticker);
       } else if (type === "all") {
         visibleTickers = STOCKS.map(s => s.ticker);
       } else if (type === "clear") {
@@ -388,12 +469,13 @@
     // ポートフォリオ計算
     // ==============================================================
     function calculatePortfolioTotal() {
-      const totalWeight = userPortfolio.reduce((acc, curr) => acc + curr.weight, 0);
+      const pf = getActivePortfolio();
+      const totalWeight = pf.reduce((acc, curr) => acc + curr.weight, 0);
       document.getElementById("pf-total-weight").textContent = `${totalWeight}%`;
       document.getElementById("pf-total-weight").className = `font-bold font-mono ${totalWeight === 100 ? 'text-emerald-400' : 'text-amber-400'}`;
 
       const summaryElem = document.getElementById("pf-allocation-summary");
-      summaryElem.innerHTML = userPortfolio.map(p => {
+      summaryElem.innerHTML = pf.map(p => {
         const s = STOCKS.find(item => item.ticker === p.ticker);
         const name = s ? s.ticker : p.ticker;
         return `<span class="bg-slate-800 border border-slate-700/80 text-slate-300 px-1.5 py-0.5 rounded">${name} <strong class="text-white">${p.weight}%</strong></span>`;
@@ -402,7 +484,7 @@
       if (totalWeight === 0) return;
 
       let weightedDrawdown = 0;
-      userPortfolio.forEach(item => {
+      pf.forEach(item => {
         const s = STOCKS.find(stock => stock.ticker === item.ticker);
         if (s) weightedDrawdown += (item.weight / totalWeight) * s.drawdown_pct;
       });
@@ -454,8 +536,9 @@
     function renderPortfolioRows() {
       const container = document.getElementById("portfolio-rows-container");
       container.innerHTML = "";
+      const pf = getActivePortfolio();
 
-      userPortfolio.forEach((item, index) => {
+      pf.forEach((item, index) => {
         const row = document.createElement("div");
         row.className = "bg-slate-950 p-2 rounded-xl border border-slate-800 flex items-center justify-between gap-2";
 
@@ -476,53 +559,49 @@
         `;
         container.appendChild(row);
       });
-
-      try {
-        localStorage.setItem("user_drawdown_portfolio", JSON.stringify(userPortfolio));
-      } catch(e) {}
     }
 
     function updatePortfolioTicker(index, newTicker) {
-      userPortfolio[index].ticker = newTicker;
+      getActivePortfolio()[index].ticker = newTicker;
       renderPortfolioRows();
       calculatePortfolioTotal();
     }
 
     function updatePortfolioWeight(index, newWeight) {
-      userPortfolio[index].weight = parseFloat(newWeight) || 0;
+      getActivePortfolio()[index].weight = parseFloat(newWeight) || 0;
       calculatePortfolioTotal();
-      try {
-        localStorage.setItem("user_drawdown_portfolio", JSON.stringify(userPortfolio));
-      } catch(e) {}
     }
 
     function addPortfolioRow() {
-      const usedTickers = userPortfolio.map(p => p.ticker);
+      const pf = getActivePortfolio();
+      const usedTickers = pf.map(p => p.ticker);
       const nextStock = STOCKS.find(s => !usedTickers.includes(s.ticker)) || STOCKS[0];
-      userPortfolio.push({ ticker: nextStock.ticker, weight: 10 });
+      pf.push({ ticker: nextStock.ticker, weight: 10 });
       renderPortfolioRows();
       calculatePortfolioTotal();
     }
 
     function removePortfolioRow(index) {
-      if (userPortfolio.length <= 1) return;
-      userPortfolio.splice(index, 1);
+      const pf = getActivePortfolio();
+      if (pf.length <= 1) return;
+      pf.splice(index, 1);
       renderPortfolioRows();
       calculatePortfolioTotal();
     }
 
     function normalizeWeights() {
-      const sum = userPortfolio.reduce((acc, curr) => acc + curr.weight, 0);
+      const pf = getActivePortfolio();
+      const sum = pf.reduce((acc, curr) => acc + curr.weight, 0);
       if (sum === 0) return;
-      userPortfolio.forEach(item => item.weight = Math.round((item.weight / sum) * 100));
-      const newSum = userPortfolio.reduce((acc, curr) => acc + curr.weight, 0);
-      if (newSum !== 100 && userPortfolio.length > 0) userPortfolio[0].weight += (100 - newSum);
+      pf.forEach(item => item.weight = Math.round((item.weight / sum) * 100));
+      const newSum = pf.reduce((acc, curr) => acc + curr.weight, 0);
+      if (newSum !== 100 && pf.length > 0) pf[0].weight += (100 - newSum);
       renderPortfolioRows();
       calculatePortfolioTotal();
     }
 
     // ==============================================================
-    // ★ 選択した銘柄だけのスッキリ一覧表示
+    // 選択された銘柄リスト
     // ==============================================================
     let openSettingsTicker = null;
 
@@ -535,10 +614,8 @@
       const container = document.getElementById("all-stocks-list");
       container.innerHTML = "";
 
-      // 選択されている銘柄だけにフィルタリング！
       const filtered = STOCKS.filter(s => visibleTickers.includes(s.ticker));
 
-      // カウントバッジとタブのラベルを更新
       document.getElementById("visible-stocks-count").textContent = filtered.length;
       document.getElementById("tab-stocks-label").textContent = `指数一覧 (${filtered.length})`;
 
@@ -572,7 +649,6 @@
         const isSettingsOpen = openSettingsTicker === s.ticker;
 
         card.innerHTML = `
-          <!-- 上段: 銘柄情報と下落率 -->
           <div class="flex items-start justify-between">
             <div class="pr-2">
               <div class="flex items-center gap-1.5 mb-0.5">
@@ -591,14 +667,12 @@
             </div>
           </div>
 
-          <!-- 中段: プログレスバー -->
           <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden flex relative border border-slate-800">
             <div class="absolute left-[33.3%] top-0 bottom-0 w-0.5 bg-slate-700/80 z-10"></div>
             <div class="absolute left-[66.6%] top-0 bottom-0 w-0.5 bg-slate-700/80 z-10"></div>
             <div class="${barColor} h-full rounded-full" style="width: ${Math.min(100, (dd / 45) * 100)}%"></div>
           </div>
 
-          <!-- 下段: 3等分グリッド -->
           <div class="pt-1.5 border-t border-slate-800/80">
             <div class="grid grid-cols-3 gap-1.5 text-center font-mono">
               <div class="bg-slate-950/80 p-1 rounded-lg border ${dd >= th1 ? 'border-amber-500/50 bg-amber-500/10' : 'border-slate-800/80'}">
@@ -622,7 +696,6 @@
             </div>
           </div>
 
-          <!-- 目標値変更エリア（必要な時だけ開く） -->
           ${isSettingsOpen ? `
             <div class="pt-2 border-t border-slate-800 bg-slate-950/90 p-2.5 rounded-xl space-y-2">
               <div class="flex justify-between items-center text-[11px] text-slate-300">
@@ -663,8 +736,7 @@
     }
 
     window.addEventListener("DOMContentLoaded", () => {
-      renderPortfolioRows();
-      calculatePortfolioTotal();
+      switchSlot(currentSlot);
       renderSelectedStocksList();
     });
   </script>
