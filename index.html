@@ -5,170 +5,167 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ドローダウン監視">
-  <meta name="theme-color" content="#020617">
-  <title>株価ドローダウン＆ポートフォリオ監視ボード</title>
+  <meta name="theme-color" content="#090D16">
+  <title>ドローダウン監視</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       -webkit-tap-highlight-color: transparent;
+      background-color: #090D16;
     }
     input[type=range] {
       accent-color: #3b82f6;
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen py-4 px-3 sm:py-8 sm:px-6">
-  <div class="max-w-4xl mx-auto space-y-6">
+<body class="text-slate-100 min-h-screen pb-12 antialiased">
+  <div class="max-w-lg mx-auto px-4 pt-4 sm:pt-6 space-y-4">
 
-    <!-- ヘッダー -->
-    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-800 gap-3">
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="text-2xl">📉</span>
-          <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white">株価ドローダウン＆資産監視</h1>
-        </div>
-        <p class="text-xs text-slate-400 mt-0.5">最高値（ATH）からの下落率 ＆ 指数ごとの自由な目標設定・ポートフォリオ全体シミュレーション</p>
+    <!-- 1. ミニマルヘッダー -->
+    <header class="flex items-center justify-between pb-3 border-b border-slate-800/80">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">📉</span>
+        <h1 class="text-lg font-bold text-white tracking-tight">ドローダウン監視</h1>
       </div>
-      <div class="flex items-center justify-between sm:justify-end gap-3">
-        <div class="text-left sm:text-right text-[11px] text-slate-400">
-          <div>データ更新</div>
-          <div class="font-mono text-slate-200 font-semibold">2026/11/07 16:38</div>
-        </div>
-        <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-2 px-3.5 rounded-lg shadow active:scale-95 transition flex items-center gap-1.5">
-          <span>🔄</span> 最新データ更新
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] font-mono text-slate-400">11/07 16:44</span>
+        <button onclick="location.reload()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 active:scale-95 transition" title="更新">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
         </button>
       </div>
     </header>
 
-    <!-- ============================================================== -->
-    <!-- セクション1: マイ・ポートフォリオ全体の下落率シミュレーター -->
-    <!-- ============================================================== -->
-    <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/40 border-2 border-indigo-500/30 rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-800">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-lg">💼</span>
-            <h2 class="text-lg font-bold text-white tracking-tight">マイ・ポートフォリオ全体の下落率</h2>
-          </div>
-          <p class="text-xs text-slate-400 mt-0.5">保有割合（例: オルカン70% + FANG+ 30%など）に応じた株式資産全体の下落状況</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="normalizeWeights()" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-md transition font-medium">
-            ⚖️ 比率を100%に自動調整
-          </button>
-          <button onclick="addPortfolioRow()" class="text-[11px] bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded-md transition font-medium flex items-center gap-1">
-            <span>＋</span> 銘柄追加
-          </button>
-        </div>
-      </div>
+    <!-- 2. 洗練された2タブ切り替え（スマホの親指で押しやすい設計） -->
+    <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-xl">
+      <button id="tab-btn-portfolio" onclick="switchTab('portfolio')" class="py-2 text-xs font-bold rounded-lg transition bg-blue-600 text-white shadow-sm flex items-center justify-center gap-1.5">
+        <span>💼</span> マイ資産全体
+      </button>
+      <button id="tab-btn-stocks" onclick="switchTab('stocks')" class="py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
+        <span>📊</span> 指数一覧 (24)
+      </button>
+    </div>
 
-      <!-- 巨大サマリー表示 -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5 items-center">
-        <div class="md:col-span-1 bg-slate-950/70 border border-slate-800 rounded-xl p-4 text-center">
-          <div class="text-xs text-slate-400 mb-1">ポートフォリオ全体の下落率</div>
-          <div id="pf-total-drawdown" class="text-4xl font-extrabold font-mono text-white tracking-tight">--%</div>
-          <div id="pf-status-badge" class="mt-2 inline-block text-[11px] px-2.5 py-0.5 rounded-full font-medium">計算中</div>
+    <!-- ============================================================== -->
+    <!-- タブA: マイ資産全体（ポートフォリオ下落率） -->
+    <!-- ============================================================== -->
+    <div id="tab-content-portfolio" class="space-y-4">
+
+      <!-- 巨大下落率メインカード -->
+      <div class="bg-gradient-to-b from-slate-900 to-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl text-center relative overflow-hidden">
+        <div class="text-xs text-slate-400 font-medium mb-1">あなたの資産全体の下落率（ATH基準）</div>
+        
+        <div id="pf-total-drawdown" class="text-5xl font-black font-mono tracking-tight my-2 text-emerald-400">
+          --%
         </div>
 
-        <div class="md:col-span-2 space-y-2 bg-slate-950/40 border border-slate-800/80 rounded-xl p-4">
-          <div class="flex justify-between text-xs text-slate-400 font-mono">
-            <span>最高値(0%)</span>
+        <div id="pf-status-badge" class="inline-block text-xs px-3 py-1 rounded-full font-semibold my-1">
+          計算中
+        </div>
+
+        <!-- 進捗バー -->
+        <div class="space-y-1.5 mt-4 text-left">
+          <div class="flex justify-between text-[10px] font-mono text-slate-400">
+            <span>最高値 (0%)</span>
             <span>-15%</span>
             <span>-30%</span>
             <span>-45%+</span>
           </div>
-          <!-- メーター -->
-          <div class="w-full bg-slate-950 rounded-full h-4 p-0.5 overflow-hidden flex relative border border-slate-800">
+          <div class="w-full bg-slate-950 rounded-full h-3 p-0.5 overflow-hidden flex relative border border-slate-800">
             <div class="absolute left-[33.3%] top-0 bottom-0 w-0.5 bg-slate-700/80 z-10"></div>
             <div class="absolute left-[66.6%] top-0 bottom-0 w-0.5 bg-slate-700/80 z-10"></div>
             <div id="pf-progress-bar" class="h-full rounded-full transition-all duration-300 bg-blue-500" style="width: 0%"></div>
           </div>
-          <div id="pf-next-hint" class="text-xs text-slate-300 pt-1">
+          <div id="pf-next-hint" class="text-xs text-slate-300 font-medium pt-1 text-center font-mono">
             計算中...
           </div>
         </div>
+
+        <!-- 現在の保有配分サマリー -->
+        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+          <div id="pf-allocation-summary" class="flex flex-wrap gap-1.5 text-xs">
+            <!-- JSでバッジ表示 -->
+          </div>
+          <button onclick="togglePortfolioEdit()" class="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 shrink-0 ml-2">
+            <span>⚙️ 配分を変更</span>
+          </button>
+        </div>
       </div>
 
-      <!-- ポートフォリオ構成設定リスト -->
-      <div class="space-y-3" id="portfolio-rows-container">
-        <!-- JSで動的生成 -->
+      <!-- 配分編集エリア（初期状態はスッキリ非表示、必要な時だけ展開） -->
+      <div id="pf-edit-panel" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+          <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+            <span>⚙️</span> 保有比率の設定
+          </h3>
+          <div class="flex items-center gap-2">
+            <button onclick="normalizeWeights()" class="text-[11px] bg-slate-800 text-blue-400 px-2 py-0.5 rounded font-medium">
+              100%に調整
+            </button>
+            <button onclick="addPortfolioRow()" class="text-[11px] bg-blue-600 text-white px-2 py-0.5 rounded font-medium">
+              ＋ 銘柄追加
+            </button>
+          </div>
+        </div>
+
+        <div id="portfolio-rows-container" class="space-y-2">
+          <!-- JSでレンダリング -->
+        </div>
+
+        <div class="flex justify-between items-center text-xs text-slate-400 pt-2 border-t border-slate-800">
+          <div>合計: <span id="pf-total-weight" class="font-bold font-mono text-white">100%</span></div>
+          <button onclick="togglePortfolioEdit()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1 rounded font-medium">
+            完了
+          </button>
+        </div>
       </div>
 
-      <div class="flex justify-between items-center text-xs text-slate-400 pt-3 mt-3 border-t border-slate-800/80">
-        <div>合計割合: <span id="pf-total-weight" class="font-bold font-mono text-white">100%</span></div>
-        <div class="text-[11px] text-slate-500">※設定比率は端末に自動保存されます</div>
+      <!-- 目安ルール案内 -->
+      <div class="bg-slate-900/40 border border-slate-800/60 rounded-xl p-3 text-[11px] text-slate-400 space-y-1">
+        <div class="font-semibold text-slate-300">💡 暴落時買い増しルールの目安</div>
+        <div class="flex justify-between text-slate-400 pt-1">
+          <span>・-15%: 調整局面（第1弾）</span>
+          <span>・-30%: 本格暴落（第2弾）</span>
+          <span>・-45%: 歴史的暴落</span>
+        </div>
       </div>
+
     </div>
 
     <!-- ============================================================== -->
-    <!-- セクション2: 銘柄フォーカス詳細 ＆ 指数ごとの自由な目標ライン設定 -->
+    <!-- タブB: 指数一覧（見やすさ最優先のカード配置） -->
     <!-- ============================================================== -->
-    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-lg">🔍</span>
-            <h2 class="text-lg font-bold text-white tracking-tight">個別銘柄の詳細 ＆ 買い増し目標設定</h2>
-          </div>
-          <p class="text-xs text-slate-400 mt-0.5">指数ごとに目標下落率（基本: 15% / 30% / 45%）を自由に変更できます</p>
-        </div>
-        <div>
-          <select id="single-ticker-select" onchange="renderFocusStock(this.value)" class="w-full sm:w-auto bg-slate-950 border border-slate-700 text-white font-semibold text-sm rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
-            <!-- JSで動的生成 -->
-          </select>
-        </div>
+    <div id="tab-content-stocks" class="hidden space-y-3">
+
+      <!-- カテゴリピルフィルター（横スクロール可能） -->
+      <div class="flex gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+        <button onclick="filterCategory('ALL')" class="cat-btn active shrink-0 px-3 py-1 rounded-full font-bold bg-blue-600 text-white">すべて</button>
+        <button onclick="filterCategory('全世界・全米')" class="cat-btn shrink-0 px-3 py-1 rounded-full font-medium bg-slate-800 text-slate-300">全世界・全米</button>
+        <button onclick="filterCategory('ハイテク・グロース')" class="cat-btn shrink-0 px-3 py-1 rounded-full font-medium bg-slate-800 text-slate-300">ハイテク</button>
+        <button onclick="filterCategory('配当・バリュー')" class="cat-btn shrink-0 px-3 py-1 rounded-full font-medium bg-slate-800 text-slate-300">高配当</button>
+        <button onclick="filterCategory('新興国')" class="cat-btn shrink-0 px-3 py-1 rounded-full font-medium bg-slate-800 text-slate-300">新興国</button>
+        <button onclick="filterCategory('個別株')" class="cat-btn shrink-0 px-3 py-1 rounded-full font-medium bg-slate-800 text-slate-300">個別株</button>
       </div>
 
-      <!-- 詳細カード表示エリア -->
-      <div id="focus-stock-card" class="transition-all">
+      <!-- 各銘柄カード一覧 -->
+      <div id="all-stocks-list" class="space-y-2.5">
         <!-- JSでレンダリング -->
       </div>
+
     </div>
-
-    <!-- ============================================================== -->
-    <!-- セクション3: 全銘柄ドローダウン一覧カード（フィルター付き） -->
-    <!-- ============================================================== -->
-    <div class="space-y-4">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h2 class="text-lg font-bold text-white flex items-center gap-2">
-          <span>📊</span> 全銘柄ドローダウン一覧 (24銘柄)
-        </h2>
-        <div class="flex flex-wrap gap-1.5" id="category-filter-buttons">
-          <button onclick="filterCategory('ALL')" class="cat-btn active text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-600 text-white transition">すべて</button>
-          <button onclick="filterCategory('全世界・全米')" class="cat-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">全世界・全米</button>
-          <button onclick="filterCategory('ハイテク・グロース')" class="cat-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">ハイテク</button>
-          <button onclick="filterCategory('配当・バリュー')" class="cat-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">高配当</button>
-          <button onclick="filterCategory('新興国')" class="cat-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">新興国</button>
-          <button onclick="filterCategory('個別株')" class="cat-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">個別株</button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="all-stocks-grid">
-        <!-- JSで全銘柄カードを描画 -->
-      </div>
-    </div>
-
-    <footer class="text-center text-xs text-slate-500 pt-6 pb-12">
-      株価ドローダウン監視システム | データ元: Yahoo Finance
-    </footer>
 
   </div>
 
   <script>
-    const STOCKS = [{"ticker": "ACWI", "name": "オルカン (MSCI ACWI / 全世界株)", "category": "全世界・全米", "current_price": 152.37, "ath": 162.8, "ath_date": "2026-08-13", "drawdown_pct": 6.41, "drop_amount": 10.43, "currency": "USD", "updated_at": "2026-11-07 16:38:47"}, {"ticker": "VT", "name": "VT (バンガード・トータル・ワールド)", "category": "全世界・全米", "current_price": 151.73, "ath": 162.29, "ath_date": "2026-08-14", "drawdown_pct": 6.51, "drop_amount": 10.56, "currency": "USD", "updated_at": "2026-11-07 16:38:47"}, {"ticker": "VOO", "name": "S&P 500 (バンガード VOO)", "category": "全世界・全米", "current_price": 675.99, "ath": 718.47, "ath_date": "2026-10-06", "drawdown_pct": 5.91, "drop_amount": 42.48, "currency": "USD", "updated_at": "2026-11-07 16:38:47"}, {"ticker": "SPY", "name": "S&P 500 (SPDR SPY)", "category": "全世界・全米", "current_price": 735.29, "ath": 781.62, "ath_date": "2026-10-06", "drawdown_pct": 5.93, "drop_amount": 46.33, "currency": "USD", "updated_at": "2026-11-07 16:38:48"}, {"ticker": "VTI", "name": "全米株式 (バンガード VTI)", "category": "全世界・全米", "current_price": 361.93, "ath": 384.15, "ath_date": "2026-08-13", "drawdown_pct": 5.78, "drop_amount": 22.22, "currency": "USD", "updated_at": "2026-11-07 16:38:48"}, {"ticker": "QQQ", "name": "Nasdaq 100 (Invesco QQQ)", "category": "ハイテク・グロース", "current_price": 656.1, "ath": 762.86, "ath_date": "2026-10-06", "drawdown_pct": 13.99, "drop_amount": 106.76, "currency": "USD", "updated_at": "2026-11-07 16:38:47"}, {"ticker": "DIA", "name": "NYダウ (SPDR ダウ工業株30)", "category": "全世界・全米", "current_price": 512.22, "ath": 544.92, "ath_date": "2026-08-05", "drawdown_pct": 6.0, "drop_amount": 32.7, "currency": "USD", "updated_at": "2026-11-07 16:38:48"}, {"ticker": "FNGS", "name": "FANG+ (MicroSectors FANG+ ETN)", "category": "ハイテク・グロース", "current_price": 72.58, "ath": 84.95, "ath_date": "2026-10-08", "drawdown_pct": 14.56, "drop_amount": 12.37, "currency": "USD", "updated_at": "2026-11-07 16:38:47"}, {"ticker": "SOXX", "name": "半導体株 (iShares SOX指数)", "category": "ハイテク・グロース", "current_price": 136.53, "ath": 218.51, "ath_date": "2026-06-22", "drawdown_pct": 37.52, "drop_amount": 81.98, "currency": "USD", "updated_at": "2026-11-07 16:38:48"}, {"ticker": "SMH", "name": "半導体株 (VanEck 半導体ETF)", "category": "ハイテク・グロース", "current_price": 463.96, "ath": 671.83, "ath_date": "2026-06-22", "drawdown_pct": 30.94, "drop_amount": 207.87, "currency": "USD", "updated_at": "2026-11-07 16:38:48"}, {"ticker": "VYM", "name": "米国高配当株 (バンガード VYM)", "category": "配当・バリュー", "current_price": 159.08, "ath": 166.68, "ath_date": "2026-08-13", "drawdown_pct": 4.56, "drop_amount": 7.6, "currency": "USD", "updated_at": "2026-11-07 16:38:48"}, {"ticker": "HDV", "name": "米国高配当株 (iShares HDV)", "category": "配当・バリュー", "current_price": 30.35, "ath": 31.43, "ath_date": "2026-11-05", "drawdown_pct": 3.44, "drop_amount": 1.08, "currency": "USD", "updated_at": "2026-11-07 16:38:49"}, {"ticker": "SPYD", "name": "SPYD (S&P500 高配当ETF)", "category": "配当・バリュー", "current_price": 49.41, "ath": 51.1, "ath_date": "2026-11-05", "drawdown_pct": 3.32, "drop_amount": 1.69, "currency": "USD", "updated_at": "2026-11-07 16:38:48"}, {"ticker": "EPI", "name": "インド株 (WisdomTree India)", "category": "新興国", "current_price": 43.44, "ath": 50.86, "ath_date": "2024-09-26", "drawdown_pct": 14.58, "drop_amount": 7.42, "currency": "USD", "updated_at": "2026-11-07 16:38:49"}, {"ticker": "VWO", "name": "新興国株 (バンガード VWO)", "category": "新興国", "current_price": 55.29, "ath": 61.42, "ath_date": "2026-09-04", "drawdown_pct": 9.98, "drop_amount": 6.13, "currency": "USD", "updated_at": "2026-11-07 16:38:49"}, {"ticker": "QLD", "name": "レバナス (ProShares Ultra QQQ 2倍)", "category": "レバレッジ", "current_price": 74.11, "ath": 101.62, "ath_date": "2026-10-06", "drawdown_pct": 27.07, "drop_amount": 27.51, "currency": "USD", "updated_at": "2026-11-07 16:38:49"}, {"ticker": "TQQQ", "name": "TQQQ (ProShares UltraPro QQQ 3倍)", "category": "レバレッジ", "current_price": 52.25, "ath": 87.72, "ath_date": "2026-06-03", "drawdown_pct": 40.43, "drop_amount": 35.47, "currency": "USD", "updated_at": "2026-11-07 16:38:49"}, {"ticker": "NVDA", "name": "エヌビディア (NVIDIA)", "category": "個別株", "current_price": 186.64, "ath": 243.37, "ath_date": "2026-10-06", "drawdown_pct": 23.31, "drop_amount": 56.73, "currency": "USD", "updated_at": "2026-11-07 16:38:50"}, {"ticker": "AAPL", "name": "アップル (Apple)", "category": "個別株", "current_price": 342.37, "ath": 355.38, "ath_date": "2026-11-05", "drawdown_pct": 3.66, "drop_amount": 13.01, "currency": "USD", "updated_at": "2026-11-07 16:38:51"}, {"ticker": "MSFT", "name": "マイクロソフト (Microsoft)", "category": "個別株", "current_price": 530.61, "ath": 559.15, "ath_date": "2026-11-04", "drawdown_pct": 5.1, "drop_amount": 28.54, "currency": "USD", "updated_at": "2026-11-07 16:38:50"}, {"ticker": "AMZN", "name": "アマゾン (Amazon)", "category": "個別株", "current_price": 259.3, "ath": 287.2, "ath_date": "2026-08-03", "drawdown_pct": 9.71, "drop_amount": 27.9, "currency": "USD", "updated_at": "2026-11-07 16:38:50"}, {"ticker": "GOOGL", "name": "アルファベット / Google", "category": "個別株", "current_price": 284.78, "ath": 408.1, "ath_date": "2026-05-18", "drawdown_pct": 30.22, "drop_amount": 123.32, "currency": "USD", "updated_at": "2026-11-07 16:38:51"}, {"ticker": "META", "name": "メタ (Meta)", "category": "個別株", "current_price": 610.15, "ath": 793.02, "ath_date": "2025-08-15", "drawdown_pct": 23.06, "drop_amount": 182.87, "currency": "USD", "updated_at": "2026-11-07 16:38:51"}, {"ticker": "TSLA", "name": "テスラ (Tesla)", "category": "個別株", "current_price": 358.22, "ath": 498.83, "ath_date": "2025-12-22", "drawdown_pct": 28.19, "drop_amount": 140.61, "currency": "USD", "updated_at": "2026-11-07 16:38:51"}];
+    const STOCKS = [{"ticker": "ACWI", "name": "オルカン (MSCI ACWI / 全世界株)", "category": "全世界・全米", "current_price": 152.37, "ath": 162.8, "ath_date": "2026-08-13", "drawdown_pct": 6.41, "drop_amount": 10.43, "currency": "USD", "updated_at": "2026-11-07 16:44:06"}, {"ticker": "VT", "name": "VT (バンガード・トータル・ワールド)", "category": "全世界・全米", "current_price": 151.73, "ath": 162.29, "ath_date": "2026-08-14", "drawdown_pct": 6.51, "drop_amount": 10.56, "currency": "USD", "updated_at": "2026-11-07 16:44:06"}, {"ticker": "VOO", "name": "S&P 500 (バンガード VOO)", "category": "全世界・全米", "current_price": 675.99, "ath": 718.47, "ath_date": "2026-10-06", "drawdown_pct": 5.91, "drop_amount": 42.48, "currency": "USD", "updated_at": "2026-11-07 16:44:07"}, {"ticker": "SPY", "name": "S&P 500 (SPDR SPY)", "category": "全世界・全米", "current_price": 735.29, "ath": 781.62, "ath_date": "2026-10-06", "drawdown_pct": 5.93, "drop_amount": 46.33, "currency": "USD", "updated_at": "2026-11-07 16:44:07"}, {"ticker": "VTI", "name": "全米株式 (バンガード VTI)", "category": "全世界・全米", "current_price": 361.93, "ath": 384.15, "ath_date": "2026-08-13", "drawdown_pct": 5.78, "drop_amount": 22.22, "currency": "USD", "updated_at": "2026-11-07 16:44:07"}, {"ticker": "QQQ", "name": "Nasdaq 100 (Invesco QQQ)", "category": "ハイテク・グロース", "current_price": 656.1, "ath": 762.86, "ath_date": "2026-10-06", "drawdown_pct": 13.99, "drop_amount": 106.76, "currency": "USD", "updated_at": "2026-11-07 16:44:07"}, {"ticker": "DIA", "name": "NYダウ (SPDR ダウ工業株30)", "category": "全世界・全米", "current_price": 512.22, "ath": 544.92, "ath_date": "2026-08-05", "drawdown_pct": 6.0, "drop_amount": 32.7, "currency": "USD", "updated_at": "2026-11-07 16:44:07"}, {"ticker": "FNGS", "name": "FANG+ (MicroSectors FANG+ ETN)", "category": "ハイテク・グロース", "current_price": 72.58, "ath": 84.95, "ath_date": "2026-10-08", "drawdown_pct": 14.56, "drop_amount": 12.37, "currency": "USD", "updated_at": "2026-11-07 16:44:06"}, {"ticker": "SOXX", "name": "半導体株 (iShares SOX指数)", "category": "ハイテク・グロース", "current_price": 136.53, "ath": 218.51, "ath_date": "2026-06-22", "drawdown_pct": 37.52, "drop_amount": 81.98, "currency": "USD", "updated_at": "2026-11-07 16:44:08"}, {"ticker": "SMH", "name": "半導体株 (VanEck 半導体ETF)", "category": "ハイテク・グロース", "current_price": 463.96, "ath": 671.83, "ath_date": "2026-06-22", "drawdown_pct": 30.94, "drop_amount": 207.87, "currency": "USD", "updated_at": "2026-11-07 16:44:08"}, {"ticker": "VYM", "name": "米国高配当株 (バンガード VYM)", "category": "配当・バリュー", "current_price": 159.08, "ath": 166.68, "ath_date": "2026-08-13", "drawdown_pct": 4.56, "drop_amount": 7.6, "currency": "USD", "updated_at": "2026-11-07 16:44:08"}, {"ticker": "HDV", "name": "米国高配当株 (iShares HDV)", "category": "配当・バリュー", "current_price": 30.35, "ath": 31.43, "ath_date": "2026-11-05", "drawdown_pct": 3.44, "drop_amount": 1.08, "currency": "USD", "updated_at": "2026-11-07 16:44:08"}, {"ticker": "SPYD", "name": "SPYD (S&P500 高配当ETF)", "category": "配当・バリュー", "current_price": 49.41, "ath": 51.1, "ath_date": "2026-11-05", "drawdown_pct": 3.32, "drop_amount": 1.69, "currency": "USD", "updated_at": "2026-11-07 16:44:08"}, {"ticker": "EPI", "name": "インド株 (WisdomTree India)", "category": "新興国", "current_price": 43.44, "ath": 50.86, "ath_date": "2024-09-26", "drawdown_pct": 14.58, "drop_amount": 7.42, "currency": "USD", "updated_at": "2026-11-07 16:44:08"}, {"ticker": "VWO", "name": "新興国株 (バンガード VWO)", "category": "新興国", "current_price": 55.29, "ath": 61.42, "ath_date": "2026-09-04", "drawdown_pct": 9.98, "drop_amount": 6.13, "currency": "USD", "updated_at": "2026-11-07 16:44:09"}, {"ticker": "QLD", "name": "レバナス (ProShares Ultra QQQ 2倍)", "category": "レバレッジ", "current_price": 74.11, "ath": 101.62, "ath_date": "2026-10-06", "drawdown_pct": 27.07, "drop_amount": 27.51, "currency": "USD", "updated_at": "2026-11-07 16:44:09"}, {"ticker": "TQQQ", "name": "TQQQ (ProShares UltraPro QQQ 3倍)", "category": "レバレッジ", "current_price": 52.25, "ath": 87.72, "ath_date": "2026-06-03", "drawdown_pct": 40.43, "drop_amount": 35.47, "currency": "USD", "updated_at": "2026-11-07 16:44:09"}, {"ticker": "NVDA", "name": "エヌビディア (NVIDIA)", "category": "個別株", "current_price": 186.64, "ath": 243.37, "ath_date": "2026-10-06", "drawdown_pct": 23.31, "drop_amount": 56.73, "currency": "USD", "updated_at": "2026-11-07 16:44:09"}, {"ticker": "AAPL", "name": "アップル (Apple)", "category": "個別株", "current_price": 342.37, "ath": 355.38, "ath_date": "2026-11-05", "drawdown_pct": 3.66, "drop_amount": 13.01, "currency": "USD", "updated_at": "2026-11-07 16:44:10"}, {"ticker": "MSFT", "name": "マイクロソフト (Microsoft)", "category": "個別株", "current_price": 530.61, "ath": 559.15, "ath_date": "2026-11-04", "drawdown_pct": 5.1, "drop_amount": 28.54, "currency": "USD", "updated_at": "2026-11-07 16:44:10"}, {"ticker": "AMZN", "name": "アマゾン (Amazon)", "category": "個別株", "current_price": 259.3, "ath": 287.2, "ath_date": "2026-08-03", "drawdown_pct": 9.71, "drop_amount": 27.9, "currency": "USD", "updated_at": "2026-11-07 16:44:10"}, {"ticker": "GOOGL", "name": "アルファベット / Google", "category": "個別株", "current_price": 284.78, "ath": 408.1, "ath_date": "2026-05-18", "drawdown_pct": 30.22, "drop_amount": 123.32, "currency": "USD", "updated_at": "2026-11-07 16:44:10"}, {"ticker": "META", "name": "メタ (Meta)", "category": "個別株", "current_price": 610.15, "ath": 793.02, "ath_date": "2025-08-15", "drawdown_pct": 23.06, "drop_amount": 182.87, "currency": "USD", "updated_at": "2026-11-07 16:44:10"}, {"ticker": "TSLA", "name": "テスラ (Tesla)", "category": "個別株", "current_price": 358.22, "ath": 498.83, "ath_date": "2025-12-22", "drawdown_pct": 28.19, "drop_amount": 140.61, "currency": "USD", "updated_at": "2026-11-07 16:44:10"}];
 
-    // 初期ポートフォリオ
     let userPortfolio = [
       { ticker: "ACWI", weight: 70 },
       { ticker: "FNGS", weight: 30 }
     ];
 
-    // 指数ごとのカスタムしきい値（デフォルト: [15, 30, 45]）
     let customThresholds = {};
 
-    // LocalStorageから設定を復元
     try {
       const savedPf = localStorage.getItem("user_drawdown_portfolio");
       if (savedPf) userPortfolio = JSON.parse(savedPf);
@@ -184,14 +181,12 @@
     function updateSingleThreshold(ticker, index, value) {
       const val = parseFloat(value);
       if (isNaN(val) || val <= 0 || val >= 100) return;
-      if (!customThresholds[ticker]) {
-        customThresholds[ticker] = [15, 30, 45];
-      }
+      if (!customThresholds[ticker]) customThresholds[ticker] = [15, 30, 45];
       customThresholds[ticker][index] = val;
       try {
         localStorage.setItem("user_custom_thresholds", JSON.stringify(customThresholds));
       } catch(e) {}
-      renderFocusStock(ticker);
+      renderStocksList(currentCategory);
     }
 
     function resetSingleThresholds(ticker) {
@@ -201,263 +196,133 @@
           localStorage.setItem("user_custom_thresholds", JSON.stringify(customThresholds));
         } catch(e) {}
       }
-      renderFocusStock(ticker);
+      renderStocksList(currentCategory);
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
-      populateSelectBox();
-      renderPortfolioRows();
-      calculatePortfolioTotal();
-      renderFocusStock(STOCKS[0]?.ticker || "ACWI");
-      renderAllStocksGrid("ALL");
-    });
+    // タブ切り替え
+    let currentTab = "portfolio";
+    function switchTab(tab) {
+      currentTab = tab;
+      const btnPf = document.getElementById("tab-btn-portfolio");
+      const btnSt = document.getElementById("tab-btn-stocks");
+      const cntPf = document.getElementById("tab-content-portfolio");
+      const cntSt = document.getElementById("tab-content-stocks");
 
-    function populateSelectBox() {
-      const select = document.getElementById("single-ticker-select");
-      select.innerHTML = "";
-      const categories = [...new Set(STOCKS.map(s => s.category))];
-      categories.forEach(cat => {
-        const group = document.createElement("optgroup");
-        group.label = cat;
-        STOCKS.filter(s => s.category === cat).forEach(s => {
-          const opt = document.createElement("option");
-          opt.value = s.ticker;
-          opt.textContent = `${s.name} (${s.ticker}) : -${s.drawdown_pct.toFixed(2)}%`;
-          group.appendChild(opt);
-        });
-        select.appendChild(group);
-      });
-    }
-
-    function renderFocusStock(ticker) {
-      const s = STOCKS.find(item => item.ticker === ticker);
-      if (!s) return;
-
-      const dd = s.drawdown_pct;
-      const ths = getThresholds(s.ticker);
-      const th1 = ths[0] ?? 15;
-      const th2 = ths[1] ?? 30;
-      const th3 = ths[2] ?? 45;
-
-      const p1 = (s.ath * (1 - th1 / 100)).toFixed(2);
-      const p2 = (s.ath * (1 - th2 / 100)).toFixed(2);
-      const p3 = (s.ath * (1 - th3 / 100)).toFixed(2);
-
-      let badgeColor = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
-      let barColor = "bg-emerald-500";
-      let statusText = "小幅調整（健全）";
-      if (dd >= th3) {
-        badgeColor = "bg-rose-500/20 text-rose-400 border-rose-500/30";
-        barColor = "bg-rose-500";
-        statusText = `第3目標(-${th3}%)到達！歴史的大暴落（全力買い場）`;
-      } else if (dd >= th2) {
-        badgeColor = "bg-orange-500/20 text-orange-400 border-orange-500/30";
-        barColor = "bg-orange-500";
-        statusText = `第2目標(-${th2}%)到達！本格下落（第2買い増し水準）`;
-      } else if (dd >= th1) {
-        badgeColor = "bg-amber-500/20 text-amber-400 border-amber-500/30";
-        barColor = "bg-amber-500";
-        statusText = `第1目標(-${th1}%)到達！調整局面（第1買い増し圏）`;
-      }
-
-      // 次の目標ラインの特定
-      const sortedThs = [th1, th2, th3].sort((a,b)=>a-b);
-      const nextLvl = sortedThs.find(l => l > dd);
-      let nextHintHtml = "";
-      if (nextLvl) {
-        const rem = (nextLvl - dd).toFixed(2);
-        const remPrice = (s.current_price - (s.ath * (1 - nextLvl/100))).toFixed(2);
-        nextHintHtml = `🎯 次の <strong>-${nextLvl}%</strong> ラインまで あと <strong>-${rem}%</strong> (あと -$${remPrice})`;
+      if (tab === "portfolio") {
+        btnPf.className = "py-2 text-xs font-bold rounded-lg transition bg-blue-600 text-white shadow-sm flex items-center justify-center gap-1.5";
+        btnSt.className = "py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-1.5";
+        cntPf.classList.remove("hidden");
+        cntSt.classList.add("hidden");
       } else {
-        nextHintHtml = `🔥 すべての目標下落ライン(-${sortedThs[sortedThs.length-1]}%)を突破中！`;
+        btnSt.className = "py-2 text-xs font-bold rounded-lg transition bg-blue-600 text-white shadow-sm flex items-center justify-center gap-1.5";
+        btnPf.className = "py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white flex items-center justify-center gap-1.5";
+        cntSt.classList.remove("hidden");
+        cntPf.classList.add("hidden");
       }
+    }
 
-      // メーター幅（th3を基準に100%スケール）
-      const maxScale = Math.max(50, th3);
-      const meterWidth = Math.min(100, (dd / maxScale) * 100);
-
-      // 目標カードのステータス生成
-      function getGoalStatus(targetTh, targetPrice) {
-        if (dd >= targetTh) {
-          return `<span class="text-rose-400 font-bold flex items-center gap-1"><span>✅ 到達済み！</span> <span class="text-[10px] text-slate-400">(現在値以下)</span></span>`;
-        } else {
-          const diffPct = (targetTh - dd).toFixed(2);
-          const diffDol = (s.current_price - targetPrice).toFixed(2);
-          return `<span class="text-slate-400 font-mono">あと <strong class="text-white">-${diffPct}%</strong> (-$${diffDol})</span>`;
-        }
-      }
-
-      document.getElementById("focus-stock-card").innerHTML = `
-        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-5 space-y-5">
-          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-            <div>
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">${s.ticker}</span>
-                <span class="text-xs px-2.5 py-0.5 rounded-full border ${badgeColor} font-medium">${statusText}</span>
-              </div>
-              <h3 class="text-xl font-black text-white">${s.name}</h3>
-            </div>
-            <div class="text-left sm:text-right">
-              <div class="text-3xl sm:text-4xl font-extrabold font-mono ${badgeColor.split(' ')[1]}">-${s.drawdown_pct.toFixed(2)}%</div>
-              <div class="text-xs text-slate-400">最高値からの下落率</div>
-            </div>
-          </div>
-
-          <!-- メーター -->
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs font-mono text-slate-400">
-              <span>0% (ATH)</span>
-              <span class="text-amber-400">-${th1}%</span>
-              <span class="text-orange-400">-${th2}%</span>
-              <span class="text-rose-400">-${th3}%+</span>
-            </div>
-            <div class="w-full bg-slate-900 rounded-full h-3.5 p-0.5 overflow-hidden flex relative border border-slate-800">
-              <div class="absolute left-[${(th1/maxScale)*100}%] top-0 bottom-0 w-0.5 bg-slate-700 z-10"></div>
-              <div class="absolute left-[${(th2/maxScale)*100}%] top-0 bottom-0 w-0.5 bg-slate-700 z-10"></div>
-              <div class="absolute left-[${(th3/maxScale)*100}%] top-0 bottom-0 w-0.5 bg-slate-700 z-10"></div>
-              <div class="${barColor} h-full rounded-full transition-all duration-300" style="width: ${meterWidth}%"></div>
-            </div>
-            <div class="text-xs text-slate-300 pt-1 font-mono">${nextHintHtml}</div>
-          </div>
-
-          <!-- 現在価格・最高値グリッド -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1 text-xs">
-            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block mb-0.5">現在株価</span>
-              <span class="font-bold text-white text-base font-mono">$${s.current_price.toFixed(2)}</span>
-            </div>
-            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block mb-0.5">史上最高値 (ATH)</span>
-              <span class="font-bold text-slate-200 text-base font-mono">$${s.ath.toFixed(2)}</span>
-              <span class="text-[10px] text-slate-500 block">(${s.ath_date})</span>
-            </div>
-            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block mb-0.5">最高値からの下落幅</span>
-              <span class="font-bold text-rose-400 text-base font-mono">-$${s.drop_amount.toFixed(2)}</span>
-            </div>
-            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block mb-0.5">カテゴリ</span>
-              <span class="font-bold text-indigo-300 text-sm">${s.category}</span>
-            </div>
-          </div>
-
-          <!-- ============================================================== -->
-          <!-- 指数ごとの自由な買い増し目標設定UI -->
-          <!-- ============================================================== -->
-          <div class="bg-slate-900/90 border border-indigo-500/20 rounded-xl p-4 space-y-3">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-1 border-b border-slate-800">
-              <div class="text-xs font-bold text-white flex items-center gap-1.5">
-                <span>🎯</span> <strong>テスラ (Tesla)</strong> の買い増し目標ライン（数値を自由に変更可能）
-              </div>
-              <button onclick="resetSingleThresholds('${s.ticker}')" class="text-[11px] text-indigo-400 hover:text-indigo-300 transition text-left">
-                🔄 基本値(-15% / -30% / -45%)にリセット
-              </button>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <!-- 第1目標 -->
-              <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-3 space-y-1.5">
-                <div class="flex justify-between items-center text-xs">
-                  <span class="text-amber-400 font-bold">第1目標ライン</span>
-                  <div class="flex items-center gap-1">
-                    <span class="text-slate-400 font-mono">-</span>
-                    <input type="number" min="1" max="99" value="${th1}" onchange="updateSingleThreshold('${s.ticker}', 0, this.value)" class="w-12 bg-slate-900 border border-slate-700 text-white font-mono font-bold text-center rounded py-0.5 outline-none focus:border-amber-400">
-                    <span class="text-slate-400 font-mono">%</span>
-                  </div>
-                </div>
-                <div class="text-xs text-slate-300">
-                  到達株価: <strong class="text-white font-mono text-sm">$${p1}</strong>
-                </div>
-                <div class="text-[11px] pt-1 border-t border-slate-800/80">
-                  ${getGoalStatus(th1, p1)}
-                </div>
-              </div>
-
-              <!-- 第2目標 -->
-              <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-3 space-y-1.5">
-                <div class="flex justify-between items-center text-xs">
-                  <span class="text-orange-400 font-bold">第2目標ライン</span>
-                  <div class="flex items-center gap-1">
-                    <span class="text-slate-400 font-mono">-</span>
-                    <input type="number" min="1" max="99" value="${th2}" onchange="updateSingleThreshold('${s.ticker}', 1, this.value)" class="w-12 bg-slate-900 border border-slate-700 text-white font-mono font-bold text-center rounded py-0.5 outline-none focus:border-orange-400">
-                    <span class="text-slate-400 font-mono">%</span>
-                  </div>
-                </div>
-                <div class="text-xs text-slate-300">
-                  到達株価: <strong class="text-white font-mono text-sm">$${p2}</strong>
-                </div>
-                <div class="text-[11px] pt-1 border-t border-slate-800/80">
-                  ${getGoalStatus(th2, p2)}
-                </div>
-              </div>
-
-              <!-- 第3目標 -->
-              <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-3 space-y-1.5">
-                <div class="flex justify-between items-center text-xs">
-                  <span class="text-rose-400 font-bold">第3目標ライン</span>
-                  <div class="flex items-center gap-1">
-                    <span class="text-slate-400 font-mono">-</span>
-                    <input type="number" min="1" max="99" value="${th3}" onchange="updateSingleThreshold('${s.ticker}', 2, this.value)" class="w-12 bg-slate-900 border border-slate-700 text-white font-mono font-bold text-center rounded py-0.5 outline-none focus:border-rose-400">
-                    <span class="text-slate-400 font-mono">%</span>
-                  </div>
-                </div>
-                <div class="text-xs text-slate-300">
-                  到達株価: <strong class="text-white font-mono text-sm">$${p3}</strong>
-                </div>
-                <div class="text-[11px] pt-1 border-t border-slate-800/80">
-                  ${getGoalStatus(th3, p3)}
-                </div>
-              </div>
-            </div>
-            <div class="text-[11px] text-slate-400">
-              ※入力ボックスの数値を変更すると、目標株価や残り%が即座に再計算されます。設定は自動保存されます。
-            </div>
-          </div>
-        </div>
-      `;
+    function togglePortfolioEdit() {
+      const panel = document.getElementById("pf-edit-panel");
+      panel.classList.toggle("hidden");
     }
 
     // ==============================================================
-    // ポートフォリオ計算ロジック
+    // ポートフォリオ計算
     // ==============================================================
+    function calculatePortfolioTotal() {
+      const totalWeight = userPortfolio.reduce((acc, curr) => acc + curr.weight, 0);
+      document.getElementById("pf-total-weight").textContent = `${totalWeight}%`;
+      document.getElementById("pf-total-weight").className = `font-bold font-mono ${totalWeight === 100 ? 'text-emerald-400' : 'text-amber-400'}`;
+
+      // 配分サマリーバッジ
+      const summaryElem = document.getElementById("pf-allocation-summary");
+      summaryElem.innerHTML = userPortfolio.map(p => {
+        const s = STOCKS.find(item => item.ticker === p.ticker);
+        const name = s ? s.name.split(' ')[0] : p.ticker;
+        return `<span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md font-mono">${name} <strong class="text-white">${p.weight}%</strong></span>`;
+      }).join("");
+
+      if (totalWeight === 0) return;
+
+      let weightedDrawdown = 0;
+      userPortfolio.forEach(item => {
+        const s = STOCKS.find(stock => stock.ticker === item.ticker);
+        if (s) weightedDrawdown += (item.weight / totalWeight) * s.drawdown_pct;
+      });
+
+      const totalDd = weightedDrawdown;
+      const ddElem = document.getElementById("pf-total-drawdown");
+      const badgeElem = document.getElementById("pf-status-badge");
+      const barElem = document.getElementById("pf-progress-bar");
+      const hintElem = document.getElementById("pf-next-hint");
+
+      ddElem.textContent = `-${totalDd.toFixed(2)}%`;
+
+      let badgeClass = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
+      let barColor = "bg-emerald-500";
+      let statusText = "健全な推移（小幅調整）";
+
+      if (totalDd >= 45.0) {
+        badgeClass = "bg-rose-500/20 text-rose-400 border border-rose-500/30";
+        barColor = "bg-rose-500";
+        statusText = "🚨 歴史的大暴落（全力買い場）";
+      } else if (totalDd >= 30.0) {
+        badgeClass = "bg-orange-500/20 text-orange-400 border border-orange-500/30";
+        barColor = "bg-orange-500";
+        statusText = "⚡ 本格ベア相場（第2買い増し水準）";
+      } else if (totalDd >= 15.0) {
+        badgeClass = "bg-amber-500/20 text-amber-400 border border-amber-500/30";
+        barColor = "bg-amber-500";
+        statusText = "⚠️ 調整局面（第1買い増し圏）";
+      }
+
+      ddElem.className = `text-5xl font-black font-mono tracking-tight my-2 ${totalDd >= 30 ? 'text-rose-400' : totalDd >= 15 ? 'text-amber-400' : 'text-emerald-400'}`;
+      badgeElem.className = `inline-block text-xs px-3 py-1 rounded-full font-semibold my-1 ${badgeClass}`;
+      badgeElem.textContent = statusText;
+
+      const meterWidth = Math.min(100, (totalDd / 45.0) * 100);
+      barElem.style.width = `${meterWidth}%`;
+      barElem.className = `h-full rounded-full transition-all duration-300 ${barColor}`;
+
+      const lines = [15.0, 30.0, 45.0];
+      const nextLine = lines.find(l => l > totalDd);
+      if (nextLine) {
+        const rem = (nextLine - totalDd).toFixed(2);
+        hintElem.innerHTML = `🎯 次の <strong class="text-white">-${nextLine}%</strong> ラインまで あと <strong class="text-amber-400">-${rem}%</strong>`;
+      } else {
+        hintElem.innerHTML = `🔥 <strong class="text-rose-400">-45%</strong> 以上の歴史的暴落ライン到達中！`;
+      }
+    }
+
     function renderPortfolioRows() {
       const container = document.getElementById("portfolio-rows-container");
       container.innerHTML = "";
 
       userPortfolio.forEach((item, index) => {
         const row = document.createElement("div");
-        row.className = "bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3";
+        row.className = "bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2";
 
-        let selectHtml = `<select onchange="updatePortfolioTicker(${index}, this.value)" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-indigo-500 outline-none w-full sm:w-60 font-semibold">`;
+        let selectHtml = `<select onchange="updatePortfolioTicker(${index}, this.value)" class="bg-slate-900 border border-slate-700 text-white text-xs rounded px-2 py-1 outline-none font-bold flex-1 truncate">`;
         STOCKS.forEach(s => {
           const sel = s.ticker === item.ticker ? "selected" : "";
           selectHtml += `<option value="${s.ticker}" ${sel}>${s.name} (${s.ticker})</option>`;
         });
         selectHtml += `</select>`;
 
-        const stock = STOCKS.find(s => s.ticker === item.ticker) || STOCKS[0];
-        const stockDd = stock ? stock.drawdown_pct.toFixed(2) : 0;
-
         row.innerHTML = `
-          <div class="flex items-center gap-2 flex-1">
-            <span class="text-xs text-slate-500 font-mono w-4">${index + 1}.</span>
-            ${selectHtml}
-            <span class="text-xs font-mono font-bold text-slate-300 ml-1">-${stockDd}%</span>
-          </div>
-
-          <div class="flex items-center gap-3 w-full sm:w-auto">
-            <input type="range" min="0" max="100" value="${item.weight}" oninput="updatePortfolioWeight(${index}, this.value)" class="w-full sm:w-36 h-2 bg-slate-800 rounded-lg cursor-pointer">
-            <div class="flex items-center gap-1">
-              <input type="number" min="0" max="100" value="${item.weight}" oninput="updatePortfolioWeight(${index}, this.value)" class="w-14 bg-slate-900 border border-slate-700 text-white font-mono font-bold text-xs rounded px-1.5 py-1 text-center outline-none">
-              <span class="text-xs text-slate-400 font-mono">%</span>
-            </div>
-            <button onclick="removePortfolioRow(${index})" class="text-slate-500 hover:text-rose-400 p-1 text-sm transition" title="削除">✕</button>
+          ${selectHtml}
+          <div class="flex items-center gap-1.5 shrink-0">
+            <input type="number" min="0" max="100" value="${item.weight}" oninput="updatePortfolioWeight(${index}, this.value)" class="w-12 bg-slate-900 border border-slate-700 text-white font-mono font-bold text-xs rounded px-1 py-1 text-center outline-none">
+            <span class="text-xs text-slate-400 font-mono">%</span>
+            <button onclick="removePortfolioRow(${index})" class="text-slate-500 hover:text-rose-400 px-1 text-sm">✕</button>
           </div>
         `;
         container.appendChild(row);
       });
 
-      savePortfolio();
+      try {
+        localStorage.setItem("user_drawdown_portfolio", JSON.stringify(userPortfolio));
+      } catch(e) {}
     }
 
     function updatePortfolioTicker(index, newTicker) {
@@ -468,13 +333,10 @@
 
     function updatePortfolioWeight(index, newWeight) {
       userPortfolio[index].weight = parseFloat(newWeight) || 0;
-      const inputs = document.querySelectorAll(`#portfolio-rows-container > div:nth-child(${index + 1}) input`);
-      if (inputs.length >= 2) {
-        inputs[0].value = userPortfolio[index].weight;
-        inputs[1].value = userPortfolio[index].weight;
-      }
       calculatePortfolioTotal();
-      savePortfolio();
+      try {
+        localStorage.setItem("user_drawdown_portfolio", JSON.stringify(userPortfolio));
+      } catch(e) {}
     }
 
     function addPortfolioRow() {
@@ -486,10 +348,7 @@
     }
 
     function removePortfolioRow(index) {
-      if (userPortfolio.length <= 1) {
-        alert("最低1つの銘柄が必要です。");
-        return;
-      }
+      if (userPortfolio.length <= 1) return;
       userPortfolio.splice(index, 1);
       renderPortfolioRows();
       calculatePortfolioTotal();
@@ -498,92 +357,43 @@
     function normalizeWeights() {
       const sum = userPortfolio.reduce((acc, curr) => acc + curr.weight, 0);
       if (sum === 0) return;
-      userPortfolio.forEach(item => {
-        item.weight = Math.round((item.weight / sum) * 100);
-      });
+      userPortfolio.forEach(item => item.weight = Math.round((item.weight / sum) * 100));
       const newSum = userPortfolio.reduce((acc, curr) => acc + curr.weight, 0);
-      if (newSum !== 100 && userPortfolio.length > 0) {
-        userPortfolio[0].weight += (100 - newSum);
-      }
+      if (newSum !== 100 && userPortfolio.length > 0) userPortfolio[0].weight += (100 - newSum);
       renderPortfolioRows();
       calculatePortfolioTotal();
     }
 
-    function savePortfolio() {
-      try {
-        localStorage.setItem("user_drawdown_portfolio", JSON.stringify(userPortfolio));
-      } catch(e) {}
-    }
+    // ==============================================================
+    // 指数一覧（スッキリしたスマホ向け見やすいカード）
+    // ==============================================================
+    let currentCategory = "ALL";
+    let openSettingsTicker = null;
 
-    function calculatePortfolioTotal() {
-      const totalWeight = userPortfolio.reduce((acc, curr) => acc + curr.weight, 0);
-      document.getElementById("pf-total-weight").textContent = `${totalWeight}%`;
-      document.getElementById("pf-total-weight").className = `font-bold font-mono ${totalWeight === 100 ? 'text-emerald-400' : 'text-amber-400'}`;
-
-      if (totalWeight === 0) {
-        document.getElementById("pf-total-drawdown").textContent = "0.00%";
-        return;
-      }
-
-      let weightedDrawdown = 0;
-      userPortfolio.forEach(item => {
-        const s = STOCKS.find(stock => stock.ticker === item.ticker);
-        if (s) {
-          weightedDrawdown += (item.weight / totalWeight) * s.drawdown_pct;
+    function filterCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll(".cat-btn").forEach(btn => {
+        if (btn.textContent.trim().startsWith(cat) || (cat === "ALL" && btn.textContent.trim() === "すべて")) {
+          btn.className = "cat-btn active shrink-0 px-3 py-1 rounded-full font-bold bg-blue-600 text-white";
+        } else {
+          btn.className = "cat-btn shrink-0 px-3 py-1 rounded-full font-medium bg-slate-800 text-slate-300";
         }
       });
-
-      const totalDd = weightedDrawdown;
-      const ddElem = document.getElementById("pf-total-drawdown");
-      const badgeElem = document.getElementById("pf-status-badge");
-      const barElem = document.getElementById("pf-progress-bar");
-      const hintElem = document.getElementById("pf-next-hint");
-
-      ddElem.textContent = `-${totalDd.toFixed(2)}%`;
-
-      let badgeClass = "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-      let barColor = "bg-emerald-500";
-      let statusText = "小幅な調整（健全）";
-
-      if (totalDd >= 45.0) {
-        badgeClass = "bg-rose-500/20 text-rose-400 border border-rose-500/30";
-        barColor = "bg-rose-500";
-        statusText = "歴史的大暴落水準（第3目標達成・全力買い場）";
-      } else if (totalDd >= 30.0) {
-        badgeClass = "bg-orange-500/20 text-orange-400 border border-orange-500/30";
-        barColor = "bg-orange-500";
-        statusText = "本格ベア相場（第2目標達成・大チャンス）";
-      } else if (totalDd >= 15.0) {
-        badgeClass = "bg-amber-500/20 text-amber-400 border border-amber-500/30";
-        barColor = "bg-amber-500";
-        statusText = "調整局面（第1目標達成・買い増し開始）";
-      }
-
-      ddElem.className = `text-4xl font-extrabold font-mono tracking-tight ${totalDd >= 30 ? 'text-rose-400' : totalDd >= 15 ? 'text-amber-400' : 'text-emerald-400'}`;
-      badgeElem.className = `mt-2 inline-block text-[11px] px-2.5 py-0.5 rounded-full font-medium ${badgeClass}`;
-      badgeElem.textContent = statusText;
-
-      const meterWidth = Math.min(100, (totalDd / 45.0) * 100);
-      barElem.style.width = `${meterWidth}%`;
-      barElem.className = `h-full rounded-full transition-all duration-300 ${barColor}`;
-
-      const lines = [15.0, 30.0, 45.0];
-      const nextLine = lines.find(l => l > totalDd);
-      if (nextLine) {
-        const rem = (nextLine - totalDd).toFixed(2);
-        hintElem.innerHTML = `🎯 資産全体で次の <strong>-${nextLine}%</strong> 下落ラインまで あと <strong>-${rem}%</strong>`;
-      } else {
-        hintElem.innerHTML = `🔥 <strong>-45%</strong> 以上の歴史的暴落ライン到達中！`;
-      }
+      renderStocksList(cat);
     }
 
-    function renderAllStocksGrid(selectedCategory) {
-      const container = document.getElementById("all-stocks-grid");
+    function toggleStockSettings(ticker) {
+      openSettingsTicker = openSettingsTicker === ticker ? null : ticker;
+      renderStocksList(currentCategory);
+    }
+
+    function renderStocksList(category) {
+      const container = document.getElementById("all-stocks-list");
       container.innerHTML = "";
 
-      const filtered = selectedCategory === "ALL" 
+      const filtered = category === "ALL" 
         ? STOCKS 
-        : STOCKS.filter(s => s.category === selectedCategory);
+        : STOCKS.filter(s => s.category === category);
 
       filtered.forEach(s => {
         const dd = s.drawdown_pct;
@@ -592,62 +402,115 @@
         const th2 = ths[1] ?? 30;
         const th3 = ths[2] ?? 45;
 
-        let badgeColor = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+        const p1 = (s.ath * (1 - th1 / 100)).toFixed(2);
+        const p2 = (s.ath * (1 - th2 / 100)).toFixed(2);
+        const p3 = (s.ath * (1 - th3 / 100)).toFixed(2);
+
+        let ddColor = "text-emerald-400";
         let barColor = "bg-emerald-500";
         if (dd >= th3) {
-          badgeColor = "bg-rose-500/20 text-rose-400 border-rose-500/30";
+          ddColor = "text-rose-400";
           barColor = "bg-rose-500";
         } else if (dd >= th2) {
-          badgeColor = "bg-orange-500/20 text-orange-400 border-orange-500/30";
+          ddColor = "text-orange-400";
           barColor = "bg-orange-500";
         } else if (dd >= th1) {
-          badgeColor = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+          ddColor = "text-amber-400";
           barColor = "bg-amber-500";
         }
 
         const card = document.createElement("div");
-        card.className = "bg-slate-900/80 border border-slate-800 rounded-xl p-4 hover:border-slate-700 transition cursor-pointer";
-        card.onclick = () => {
-          document.getElementById("single-ticker-select").value = s.ticker;
-          renderFocusStock(s.ticker);
-          window.scrollTo({ top: 400, behavior: 'smooth' });
-        };
+        card.className = "bg-slate-900 border border-slate-800/90 rounded-2xl p-4 shadow-md space-y-2.5";
+
+        // 設定が開いているかどうか
+        const isSettingsOpen = openSettingsTicker === s.ticker;
 
         card.innerHTML = `
-          <div class="flex justify-between items-start mb-2">
+          <!-- 上段: 銘柄名と特大下落率 -->
+          <div class="flex items-start justify-between">
             <div>
-              <div class="flex items-center gap-1.5 mb-1">
+              <div class="flex items-center gap-1.5 mb-0.5">
                 <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">${s.ticker}</span>
-                <span class="text-[10px] text-slate-400 font-medium">${s.category}</span>
+                <span class="text-[10px] text-slate-400">${s.category}</span>
               </div>
-              <h4 class="text-sm font-bold text-white">${s.name}</h4>
+              <h3 class="text-base font-bold text-white tracking-tight">${s.name}</h3>
+              <div class="text-xs text-slate-400 font-mono mt-0.5">
+                現在: <strong class="text-slate-200">$${s.current_price.toFixed(2)}</strong>
+                <span class="text-slate-500 ml-1.5">最高値: $${s.ath.toFixed(2)}</span>
+              </div>
             </div>
             <div class="text-right">
-              <div class="text-xl font-extrabold font-mono ${badgeColor.split(' ')[1]}">-${s.drawdown_pct.toFixed(2)}%</div>
-              <span class="text-[10px] text-slate-400">現在: $${s.current_price.toFixed(2)}</span>
+              <div class="text-3xl font-black font-mono ${ddColor} tracking-tight">-${s.drawdown_pct.toFixed(2)}%</div>
+              <div class="text-[10px] text-rose-400/90 font-mono mt-0.5">-$${s.drop_amount.toFixed(2)}</div>
             </div>
           </div>
-          <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden flex relative border border-slate-800 my-2">
-            <div class="${barColor} h-full rounded-full" style="width: ${Math.min(100, (dd / 45) * 100)}%"></div>
+
+          <!-- 中段: すっきりプログレスバー -->
+          <div class="space-y-1">
+            <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden flex relative border border-slate-800">
+              <div class="absolute left-[33.3%] top-0 bottom-0 w-0.5 bg-slate-700/80 z-10"></div>
+              <div class="absolute left-[66.6%] top-0 bottom-0 w-0.5 bg-slate-700/80 z-10"></div>
+              <div class="${barColor} h-full rounded-full" style="width: ${Math.min(100, (dd / 45) * 100)}%"></div>
+            </div>
           </div>
-          <div class="flex justify-between items-center text-[10px] text-slate-400 pt-1 border-t border-slate-800/80">
-            <span>最高値: $${s.ath.toFixed(2)}</span>
-            <span class="text-rose-400">下落幅 -$${s.drop_amount.toFixed(2)}</span>
+
+          <!-- 下段: 買い増し目標株価バッジ（タップで設定開閉） -->
+          <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+            <div class="flex items-center gap-1 font-mono text-xs">
+              <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 ${dd >= th1 ? 'text-amber-400 border-amber-500/40 font-bold' : 'text-slate-300'}">-${th1}%: $${p1}</span>
+              <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 ${dd >= th2 ? 'text-orange-400 border-orange-500/40 font-bold' : 'text-slate-300'}">-${th2}%: $${p2}</span>
+              <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 ${dd >= th3 ? 'text-rose-400 border-rose-500/40 font-bold' : 'text-slate-300'}">-${th3}%: $${p3}</span>
+            </div>
+            <button onclick="toggleStockSettings('${s.ticker}')" class="text-xs text-blue-400 hover:text-blue-300 font-medium shrink-0 ml-1">
+              ${isSettingsOpen ? '閉じる' : '⚙️ 変更'}
+            </button>
           </div>
+
+          <!-- 目標値変更エリア（必要な時だけ開く） -->
+          ${isSettingsOpen ? `
+            <div class="mt-2 pt-2 border-t border-slate-800 bg-slate-950 p-3 rounded-xl space-y-2">
+              <div class="flex justify-between items-center text-xs text-slate-300">
+                <span class="font-bold">目標下落率(%)の変更</span>
+                <button onclick="resetSingleThresholds('${s.ticker}')" class="text-[10px] text-blue-400">初期値に戻す</button>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-xs font-mono">
+                <div>
+                  <span class="text-[10px] text-amber-400 block mb-0.5">第1目標</span>
+                  <div class="flex items-center bg-slate-900 border border-slate-700 rounded px-1.5 py-1">
+                    <span>-</span>
+                    <input type="number" value="${th1}" onchange="updateSingleThreshold('${s.ticker}', 0, this.value)" class="w-full bg-transparent text-white font-bold text-center outline-none">
+                    <span>%</span>
+                  </div>
+                </div>
+                <div>
+                  <span class="text-[10px] text-orange-400 block mb-0.5">第2目標</span>
+                  <div class="flex items-center bg-slate-900 border border-slate-700 rounded px-1.5 py-1">
+                    <span>-</span>
+                    <input type="number" value="${th2}" onchange="updateSingleThreshold('${s.ticker}', 1, this.value)" class="w-full bg-transparent text-white font-bold text-center outline-none">
+                    <span>%</span>
+                  </div>
+                </div>
+                <div>
+                  <span class="text-[10px] text-rose-400 block mb-0.5">第3目標</span>
+                  <div class="flex items-center bg-slate-900 border border-slate-700 rounded px-1.5 py-1">
+                    <span>-</span>
+                    <input type="number" value="${th3}" onchange="updateSingleThreshold('${s.ticker}', 2, this.value)" class="w-full bg-transparent text-white font-bold text-center outline-none">
+                    <span>%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ` : ''}
         `;
         container.appendChild(card);
       });
     }
 
-    function filterCategory(cat) {
-      document.querySelectorAll(".cat-btn").forEach(btn => {
-        btn.classList.remove("bg-blue-600", "text-white");
-        btn.classList.add("bg-slate-800", "text-slate-300");
-      });
-      event.target.classList.remove("bg-slate-800", "text-slate-300");
-      event.target.classList.add("bg-blue-600", "text-white");
-      renderAllStocksGrid(cat);
-    }
+    window.addEventListener("DOMContentLoaded", () => {
+      renderPortfolioRows();
+      calculatePortfolioTotal();
+      renderStocksList("ALL");
+    });
   </script>
 </body>
 </html>
