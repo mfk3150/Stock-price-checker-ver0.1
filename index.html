@@ -42,21 +42,25 @@
 <body class="min-h-screen pb-16 antialiased">
   <div class="max-w-md mx-auto px-3.5 pt-4 space-y-3.5">
 
-    <!-- 保存成功トースト通知 -->
-    <div id="save-toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-1.5">
-      <span>✅</span> <span>株式割合を保存しました！次回も自動で復元されます</span>
+    <!-- トースト通知 -->
+    <div id="save-toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-2xl transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-1.5 whitespace-nowrap">
+      <span id="save-toast-icon">✅</span> <span id="save-toast-text">保存しました！</span>
     </div>
 
-    <!-- 1. ミニマルヘッダー -->
+    <!-- 1. ミニマルヘッダー（リアルタイム通信対応） -->
     <header class="flex items-center justify-between pb-2.5 border-b border-slate-800/80">
       <div class="flex items-center gap-1.5">
         <span class="text-xl">📉</span>
         <h1 class="text-base font-bold text-white tracking-tight">ドローダウン監視</h1>
       </div>
       <div class="flex items-center gap-2">
-        <span class="text-[11px] font-mono text-slate-400">11/07 18:20 更新</span>
-        <button onclick="location.reload()" class="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 active:scale-95 transition" title="更新">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        <div id="realtime-status-badge" class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg text-[11px] font-mono text-slate-300">
+          <span id="market-dot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+          <span id="realtime-status-text">11/07 23:52</span>
+        </div>
+        <button id="refresh-btn" onclick="fetchRealtimeQuotes(true)" class="p-1.5 rounded-lg bg-blue-600/20 border border-blue-500/40 hover:bg-blue-600/30 text-blue-400 active:scale-95 transition flex items-center gap-1 px-2" title="リアルタイム株価を取得">
+          <svg id="refresh-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          <span class="text-[11px] font-bold">更新</span>
         </button>
       </div>
     </header>
@@ -255,7 +259,7 @@
   </div>
 
   <script>
-    const STOCKS = [{"ticker": "ACWI", "name": "オルカン (MSCI ACWI / 全世界株)", "category": "全世界・全米", "current_price": 152.37, "ath": 162.8, "ath_date": "2026-08-13", "drawdown_pct": 6.41, "drop_amount": 10.43, "currency": "USD", "updated_at": "2026-11-07 18:19:59"}, {"ticker": "VT", "name": "VT (バンガード・トータル・ワールド)", "category": "全世界・全米", "current_price": 151.73, "ath": 162.29, "ath_date": "2026-08-14", "drawdown_pct": 6.51, "drop_amount": 10.56, "currency": "USD", "updated_at": "2026-11-07 18:19:59"}, {"ticker": "VOO", "name": "S&P 500 (バンガード VOO)", "category": "全世界・全米", "current_price": 675.99, "ath": 718.47, "ath_date": "2026-10-06", "drawdown_pct": 5.91, "drop_amount": 42.48, "currency": "USD", "updated_at": "2026-11-07 18:19:59"}, {"ticker": "SPY", "name": "S&P 500 (SPDR SPY)", "category": "全世界・全米", "current_price": 735.29, "ath": 781.62, "ath_date": "2026-10-06", "drawdown_pct": 5.93, "drop_amount": 46.33, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "VTI", "name": "全米株式 (バンガード VTI)", "category": "全世界・全米", "current_price": 361.93, "ath": 384.15, "ath_date": "2026-08-13", "drawdown_pct": 5.78, "drop_amount": 22.22, "currency": "USD", "updated_at": "2026-11-07 18:19:59"}, {"ticker": "QQQ", "name": "Nasdaq 100 (Invesco QQQ)", "category": "ハイテク・グロース", "current_price": 656.1, "ath": 762.86, "ath_date": "2026-10-06", "drawdown_pct": 13.99, "drop_amount": 106.76, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "DIA", "name": "NYダウ (SPDR ダウ工業株30)", "category": "全世界・全米", "current_price": 512.22, "ath": 544.92, "ath_date": "2026-08-05", "drawdown_pct": 6.0, "drop_amount": 32.7, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "FNGS", "name": "FANG+ (MicroSectors FANG+ ETN)", "category": "ハイテク・グロース", "current_price": 72.58, "ath": 84.95, "ath_date": "2026-10-08", "drawdown_pct": 14.56, "drop_amount": 12.37, "currency": "USD", "updated_at": "2026-11-07 18:19:58"}, {"ticker": "SOXX", "name": "半導体株 (iShares SOX指数)", "category": "ハイテク・グロース", "current_price": 136.53, "ath": 218.51, "ath_date": "2026-06-22", "drawdown_pct": 37.52, "drop_amount": 81.98, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "SMH", "name": "半導体株 (VanEck 半導体ETF)", "category": "ハイテク・グロース", "current_price": 463.96, "ath": 671.83, "ath_date": "2026-06-22", "drawdown_pct": 30.94, "drop_amount": 207.87, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "VYM", "name": "米国高配当株 (バンガード VYM)", "category": "配当・バリュー", "current_price": 159.08, "ath": 166.68, "ath_date": "2026-08-13", "drawdown_pct": 4.56, "drop_amount": 7.6, "currency": "USD", "updated_at": "2026-11-07 18:20:01"}, {"ticker": "HDV", "name": "米国高配当株 (iShares HDV)", "category": "配当・バリュー", "current_price": 30.35, "ath": 31.43, "ath_date": "2026-11-05", "drawdown_pct": 3.44, "drop_amount": 1.08, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "SPYD", "name": "SPYD (S&P500 高配当ETF)", "category": "配当・バリュー", "current_price": 49.41, "ath": 51.1, "ath_date": "2026-11-05", "drawdown_pct": 3.32, "drop_amount": 1.69, "currency": "USD", "updated_at": "2026-11-07 18:20:00"}, {"ticker": "EPI", "name": "インド株 (WisdomTree India)", "category": "新興国", "current_price": 43.44, "ath": 50.86, "ath_date": "2024-09-26", "drawdown_pct": 14.58, "drop_amount": 7.42, "currency": "USD", "updated_at": "2026-11-07 18:20:01"}, {"ticker": "VWO", "name": "新興国株 (バンガード VWO)", "category": "新興国", "current_price": 55.29, "ath": 61.42, "ath_date": "2026-09-04", "drawdown_pct": 9.98, "drop_amount": 6.13, "currency": "USD", "updated_at": "2026-11-07 18:20:01"}, {"ticker": "QLD", "name": "レバナス (ProShares Ultra QQQ 2倍)", "category": "レバレッジ", "current_price": 74.11, "ath": 101.62, "ath_date": "2026-10-06", "drawdown_pct": 27.07, "drop_amount": 27.51, "currency": "USD", "updated_at": "2026-11-07 18:20:01"}, {"ticker": "TQQQ", "name": "TQQQ (ProShares UltraPro QQQ 3倍)", "category": "レバレッジ", "current_price": 52.25, "ath": 87.72, "ath_date": "2026-06-03", "drawdown_pct": 40.43, "drop_amount": 35.47, "currency": "USD", "updated_at": "2026-11-07 18:20:01"}, {"ticker": "NVDA", "name": "エヌビディア (NVIDIA)", "category": "個別株", "current_price": 186.64, "ath": 243.37, "ath_date": "2026-10-06", "drawdown_pct": 23.31, "drop_amount": 56.73, "currency": "USD", "updated_at": "2026-11-07 18:20:02"}, {"ticker": "AAPL", "name": "アップル (Apple)", "category": "個別株", "current_price": 342.37, "ath": 355.38, "ath_date": "2026-11-05", "drawdown_pct": 3.66, "drop_amount": 13.01, "currency": "USD", "updated_at": "2026-11-07 18:20:03"}, {"ticker": "MSFT", "name": "マイクロソフト (Microsoft)", "category": "個別株", "current_price": 530.61, "ath": 559.15, "ath_date": "2026-11-04", "drawdown_pct": 5.1, "drop_amount": 28.54, "currency": "USD", "updated_at": "2026-11-07 18:20:03"}, {"ticker": "AMZN", "name": "アマゾン (Amazon)", "category": "個別株", "current_price": 259.3, "ath": 287.2, "ath_date": "2026-08-03", "drawdown_pct": 9.71, "drop_amount": 27.9, "currency": "USD", "updated_at": "2026-11-07 18:20:02"}, {"ticker": "GOOGL", "name": "アルファベット / Google", "category": "個別株", "current_price": 284.78, "ath": 408.1, "ath_date": "2026-05-18", "drawdown_pct": 30.22, "drop_amount": 123.32, "currency": "USD", "updated_at": "2026-11-07 18:20:02"}, {"ticker": "META", "name": "メタ (Meta)", "category": "個別株", "current_price": 610.15, "ath": 793.02, "ath_date": "2025-08-15", "drawdown_pct": 23.06, "drop_amount": 182.87, "currency": "USD", "updated_at": "2026-11-07 18:20:03"}, {"ticker": "TSLA", "name": "テスラ (Tesla)", "category": "個別株", "current_price": 358.22, "ath": 498.83, "ath_date": "2025-12-22", "drawdown_pct": 28.19, "drop_amount": 140.61, "currency": "USD", "updated_at": "2026-11-07 18:20:03"}];
+    const STOCKS = [{"ticker": "ACWI", "name": "オルカン (MSCI ACWI / 全世界株)", "category": "全世界・全米", "current_price": 152.37, "ath": 162.8, "ath_date": "2026-08-13", "drawdown_pct": 6.41, "drop_amount": 10.43, "currency": "USD", "updated_at": "2026-11-07 23:52:14"}, {"ticker": "VT", "name": "VT (バンガード・トータル・ワールド)", "category": "全世界・全米", "current_price": 151.73, "ath": 162.29, "ath_date": "2026-08-14", "drawdown_pct": 6.51, "drop_amount": 10.56, "currency": "USD", "updated_at": "2026-11-07 23:52:14"}, {"ticker": "VOO", "name": "S&P 500 (バンガード VOO)", "category": "全世界・全米", "current_price": 675.99, "ath": 718.47, "ath_date": "2026-10-06", "drawdown_pct": 5.91, "drop_amount": 42.48, "currency": "USD", "updated_at": "2026-11-07 23:52:14"}, {"ticker": "SPY", "name": "S&P 500 (SPDR SPY)", "category": "全世界・全米", "current_price": 735.29, "ath": 781.62, "ath_date": "2026-10-06", "drawdown_pct": 5.93, "drop_amount": 46.33, "currency": "USD", "updated_at": "2026-11-07 23:52:15"}, {"ticker": "VTI", "name": "全米株式 (バンガード VTI)", "category": "全世界・全米", "current_price": 361.93, "ath": 384.15, "ath_date": "2026-08-13", "drawdown_pct": 5.78, "drop_amount": 22.22, "currency": "USD", "updated_at": "2026-11-07 23:52:15"}, {"ticker": "QQQ", "name": "Nasdaq 100 (Invesco QQQ)", "category": "ハイテク・グロース", "current_price": 656.1, "ath": 762.86, "ath_date": "2026-10-06", "drawdown_pct": 13.99, "drop_amount": 106.76, "currency": "USD", "updated_at": "2026-11-07 23:52:15"}, {"ticker": "DIA", "name": "NYダウ (SPDR ダウ工業株30)", "category": "全世界・全米", "current_price": 512.22, "ath": 544.92, "ath_date": "2026-08-05", "drawdown_pct": 6.0, "drop_amount": 32.7, "currency": "USD", "updated_at": "2026-11-07 23:52:15"}, {"ticker": "FNGS", "name": "FANG+ (MicroSectors FANG+ ETN)", "category": "ハイテク・グロース", "current_price": 72.58, "ath": 84.95, "ath_date": "2026-10-08", "drawdown_pct": 14.56, "drop_amount": 12.37, "currency": "USD", "updated_at": "2026-11-07 23:52:14"}, {"ticker": "SOXX", "name": "半導体株 (iShares SOX指数)", "category": "ハイテク・グロース", "current_price": 136.53, "ath": 218.51, "ath_date": "2026-06-22", "drawdown_pct": 37.52, "drop_amount": 81.98, "currency": "USD", "updated_at": "2026-11-07 23:52:16"}, {"ticker": "SMH", "name": "半導体株 (VanEck 半導体ETF)", "category": "ハイテク・グロース", "current_price": 463.96, "ath": 671.83, "ath_date": "2026-06-22", "drawdown_pct": 30.94, "drop_amount": 207.87, "currency": "USD", "updated_at": "2026-11-07 23:52:16"}, {"ticker": "VYM", "name": "米国高配当株 (バンガード VYM)", "category": "配当・バリュー", "current_price": 159.08, "ath": 166.68, "ath_date": "2026-08-13", "drawdown_pct": 4.56, "drop_amount": 7.6, "currency": "USD", "updated_at": "2026-11-07 23:52:16"}, {"ticker": "HDV", "name": "米国高配当株 (iShares HDV)", "category": "配当・バリュー", "current_price": 30.35, "ath": 31.43, "ath_date": "2026-11-05", "drawdown_pct": 3.44, "drop_amount": 1.08, "currency": "USD", "updated_at": "2026-11-07 23:52:16"}, {"ticker": "SPYD", "name": "SPYD (S&P500 高配当ETF)", "category": "配当・バリュー", "current_price": 49.41, "ath": 51.1, "ath_date": "2026-11-05", "drawdown_pct": 3.32, "drop_amount": 1.69, "currency": "USD", "updated_at": "2026-11-07 23:52:16"}, {"ticker": "EPI", "name": "インド株 (WisdomTree India)", "category": "新興国", "current_price": 43.44, "ath": 50.86, "ath_date": "2024-09-26", "drawdown_pct": 14.58, "drop_amount": 7.42, "currency": "USD", "updated_at": "2026-11-07 23:52:16"}, {"ticker": "VWO", "name": "新興国株 (バンガード VWO)", "category": "新興国", "current_price": 55.29, "ath": 61.42, "ath_date": "2026-09-04", "drawdown_pct": 9.98, "drop_amount": 6.13, "currency": "USD", "updated_at": "2026-11-07 23:52:16"}, {"ticker": "QLD", "name": "レバナス (ProShares Ultra QQQ 2倍)", "category": "レバレッジ", "current_price": 74.11, "ath": 101.62, "ath_date": "2026-10-06", "drawdown_pct": 27.07, "drop_amount": 27.51, "currency": "USD", "updated_at": "2026-11-07 23:52:17"}, {"ticker": "TQQQ", "name": "TQQQ (ProShares UltraPro QQQ 3倍)", "category": "レバレッジ", "current_price": 52.25, "ath": 87.72, "ath_date": "2026-06-03", "drawdown_pct": 40.43, "drop_amount": 35.47, "currency": "USD", "updated_at": "2026-11-07 23:52:17"}, {"ticker": "NVDA", "name": "エヌビディア (NVIDIA)", "category": "個別株", "current_price": 186.64, "ath": 243.37, "ath_date": "2026-10-06", "drawdown_pct": 23.31, "drop_amount": 56.73, "currency": "USD", "updated_at": "2026-11-07 23:52:17"}, {"ticker": "AAPL", "name": "アップル (Apple)", "category": "個別株", "current_price": 342.37, "ath": 355.38, "ath_date": "2026-11-05", "drawdown_pct": 3.66, "drop_amount": 13.01, "currency": "USD", "updated_at": "2026-11-07 23:52:18"}, {"ticker": "MSFT", "name": "マイクロソフト (Microsoft)", "category": "個別株", "current_price": 530.61, "ath": 559.15, "ath_date": "2026-11-04", "drawdown_pct": 5.1, "drop_amount": 28.54, "currency": "USD", "updated_at": "2026-11-07 23:52:18"}, {"ticker": "AMZN", "name": "アマゾン (Amazon)", "category": "個別株", "current_price": 259.3, "ath": 287.2, "ath_date": "2026-08-03", "drawdown_pct": 9.71, "drop_amount": 27.9, "currency": "USD", "updated_at": "2026-11-07 23:52:17"}, {"ticker": "GOOGL", "name": "アルファベット / Google", "category": "個別株", "current_price": 284.78, "ath": 408.1, "ath_date": "2026-05-18", "drawdown_pct": 30.22, "drop_amount": 123.32, "currency": "USD", "updated_at": "2026-11-07 23:52:18"}, {"ticker": "META", "name": "メタ (Meta)", "category": "個別株", "current_price": 610.15, "ath": 793.02, "ath_date": "2025-08-15", "drawdown_pct": 23.06, "drop_amount": 182.87, "currency": "USD", "updated_at": "2026-11-07 23:52:18"}, {"ticker": "TSLA", "name": "テスラ (Tesla)", "category": "個別株", "current_price": 358.22, "ath": 498.83, "ath_date": "2025-12-22", "drawdown_pct": 28.19, "drop_amount": 140.61, "currency": "USD", "updated_at": "2026-11-07 23:52:18"}];
 
     // スロット管理（最大3パターン）
     let currentSlot = 1;
@@ -297,14 +301,21 @@
       return portfolioSlots[currentSlot] || portfolioSlots[1];
     }
 
-    function showSaveToast() {
+    let toastTimer = null;
+    function showToast(msg, icon = "✅", bgClass = "bg-emerald-600") {
       const toast = document.getElementById("save-toast");
-      toast.classList.remove("opacity-0", "pointer-events-none");
-      toast.classList.add("opacity-100");
-      setTimeout(() => {
+      document.getElementById("save-toast-icon").textContent = icon;
+      document.getElementById("save-toast-text").textContent = msg;
+      toast.className = `fixed top-4 left-1/2 -translate-x-1/2 z-50 ${bgClass} text-white text-xs font-bold px-4 py-2 rounded-full shadow-2xl transition-all duration-300 opacity-100 flex items-center gap-1.5 whitespace-nowrap`;
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
         toast.classList.remove("opacity-100");
         toast.classList.add("opacity-0", "pointer-events-none");
-      }, 2500);
+      }, 2600);
+    }
+
+    function showSaveToast() {
+      showToast("株式割合を保存しました！次回も自動復元されます", "✅", "bg-emerald-600");
     }
 
     function saveAndApplyPortfolio() {
@@ -647,6 +658,10 @@
         card.className = "bg-slate-900 border border-slate-800/90 rounded-2xl p-3.5 shadow-md space-y-2";
 
         const isSettingsOpen = openSettingsTicker === s.ticker;
+        const chgVal = typeof s.day_change_pct === "number" ? s.day_change_pct : null;
+        const chgHtml = chgVal !== null
+          ? `<span class="ml-1 text-[10px] font-bold ${chgVal >= 0 ? 'text-emerald-400' : 'text-rose-400'}">(${chgVal >= 0 ? '+' : ''}${chgVal.toFixed(2)}%)</span>`
+          : '';
 
         card.innerHTML = `
           <div class="flex items-start justify-between">
@@ -657,7 +672,7 @@
               </div>
               <h3 class="text-sm font-bold text-white tracking-tight leading-snug">${s.name}</h3>
               <div class="text-[11px] text-slate-400 font-mono mt-0.5">
-                現在: <strong class="text-slate-200">$${s.current_price.toFixed(2)}</strong>
+                現在: <strong class="text-slate-200">$${s.current_price.toFixed(2)}</strong>${chgHtml}
                 <span class="text-slate-500 ml-1">ATH: $${s.ath.toFixed(2)}</span>
               </div>
             </div>
@@ -735,9 +750,194 @@
       });
     }
 
+    // ==============================================================
+    // ⚡ リアルタイム株価取得エンジン（CNBC Real-time + TradingView Dual API）
+    // ==============================================================
+    let isFetchingRealtime = false;
+
+    function checkUsMarketOpen() {
+      try {
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: "America/New_York",
+          weekday: "short",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: false
+        }).formatToParts(new Date());
+        const map = {};
+        parts.forEach(p => map[p.type] = p.value);
+        const wd = map.weekday;
+        if (wd === "Sat" || wd === "Sun") return false;
+        const h = parseInt(map.hour, 10);
+        const m = parseInt(map.minute, 10);
+        const mins = h * 60 + m;
+        // NY市場通常取引: 9:30 (570分) 〜 16:00 (960分)
+        return mins >= 570 && mins < 960;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function formatNowTime() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      const ss = String(now.getSeconds()).padStart(2, "0");
+      return `${hh}:${mm}:${ss}`;
+    }
+
+    function recalculateStockMetrics(s, newPrice, candidateAth, dayChgPct) {
+      if (typeof newPrice !== "number" || isNaN(newPrice) || newPrice <= 0) return;
+      let ath = s.ath;
+      if (typeof candidateAth === "number" && !isNaN(candidateAth) && candidateAth > ath) {
+        ath = candidateAth;
+      }
+      if (newPrice > ath) {
+        ath = newPrice;
+      }
+      s.current_price = Number(newPrice.toFixed(2));
+      s.ath = Number(ath.toFixed(2));
+      const drop = Math.max(0, s.ath - s.current_price);
+      s.drop_amount = Number(drop.toFixed(2));
+      s.drawdown_pct = s.ath > 0 ? Number(((drop / s.ath) * 100).toFixed(2)) : 0;
+      if (typeof dayChgPct === "number" && !isNaN(dayChgPct)) {
+        s.day_change_pct = dayChgPct;
+      }
+    }
+
+    async function fetchRealtimeQuotes(isManual = false) {
+      if (isFetchingRealtime) return;
+      isFetchingRealtime = true;
+
+      const icon = document.getElementById("refresh-icon");
+      const statusText = document.getElementById("realtime-status-text");
+      const dot = document.getElementById("market-dot");
+
+      if (icon) icon.classList.add("animate-spin");
+      if (isManual && statusText) statusText.textContent = "取得中...";
+
+      const tickers = STOCKS.map(s => s.ticker);
+      let updatedCount = 0;
+
+      // 1. CNBC Real-time Quote API (NASDAQ Last Sale リアルタイム)
+      const cnbcPromise = (async () => {
+        const cnbcUrl = `https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=${tickers.join('%7C')}&requestMethod=itv&noform=1&partnerId=2&fund=1&exthrs=1&output=json&events=1&_=${Date.now()}`;
+        const res = await fetch(cnbcUrl, { cache: "no-store" });
+        if (!res.ok) throw new Error("CNBC HTTP " + res.status);
+        const data = await res.json();
+        let quotes = data?.FormattedQuoteResult?.FormattedQuote || [];
+        if (!Array.isArray(quotes)) quotes = [quotes];
+        const map = {};
+        quotes.forEach(q => {
+          if (!q || !q.symbol) return;
+          const price = parseFloat(String(q.last || "").replace(/,/g, ""));
+          const yrHi = parseFloat(String(q.yrhiprice || "").replace(/,/g, ""));
+          const rawChg = String(q.change_pct || "").trim();
+          const chgPct = rawChg === "UNCH" ? 0 : parseFloat(rawChg.replace(/[%+,]/g, ""));
+          if (!isNaN(price) && price > 0) {
+            map[q.symbol] = { price, yrHi, chgPct };
+          }
+        });
+        return map;
+      })();
+
+      // 2. TradingView Scanner API (全期間ATH補完 & フォールバック)
+      const tvPromise = (async () => {
+        const tvUrl = "https://scanner.tradingview.com/america/scan";
+        const body = JSON.stringify({
+          filter: [{ left: "name", operation: "in_range", right: tickers }],
+          columns: ["name", "close", "High.All", "change"],
+          range: [0, 50]
+        });
+        const res = await fetch(tvUrl, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: body,
+          cache: "no-store"
+        });
+        if (!res.ok) throw new Error("TV HTTP " + res.status);
+        const data = await res.json();
+        const map = {};
+        (data?.data || []).forEach(row => {
+          const d = row.d || [];
+          const sym = d[0];
+          const price = parseFloat(d[1]);
+          const ath = parseFloat(d[2]);
+          const chgPct = parseFloat(d[3]);
+          if (sym && !isNaN(price) && price > 0) {
+            map[sym] = { price, ath, chgPct };
+          }
+        });
+        return map;
+      })();
+
+      try {
+        const [cnbcRes, tvRes] = await Promise.allSettled([cnbcPromise, tvPromise]);
+        const cnbcMap = cnbcRes.status === "fulfilled" ? cnbcRes.value : {};
+        const tvMap = tvRes.status === "fulfilled" ? tvRes.value : {};
+
+        STOCKS.forEach(s => {
+          const c = cnbcMap[s.ticker];
+          const t = tvMap[s.ticker];
+          const newPrice = c?.price ?? t?.price;
+          const bestAth = Math.max(s.ath || 0, c?.yrHi || 0, t?.ath || 0);
+          const chgPct = c?.chgPct ?? t?.chgPct;
+          if (newPrice) {
+            recalculateStockMetrics(s, newPrice, bestAth, chgPct);
+            updatedCount++;
+          }
+        });
+
+        if (updatedCount > 0) {
+          calculatePortfolioTotal();
+          // 入力操作中でなければカード一覧も再描画
+          const activeTag = document.activeElement?.tagName;
+          if (isManual || (activeTag !== "INPUT" && activeTag !== "SELECT")) {
+            renderSelectedStocksList();
+          }
+
+          const timeStr = formatNowTime();
+          const isOpen = checkUsMarketOpen();
+          if (isOpen) {
+            dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+            statusText.innerHTML = `<span class="text-emerald-400 font-bold">LIVE</span> ${timeStr}`;
+          } else {
+            dot.className = "w-1.5 h-1.5 rounded-full bg-blue-400";
+            statusText.textContent = `${timeStr} 取得(休場)`;
+          }
+
+          if (isManual) {
+            const msg = isOpen
+              ? `リアルタイム株価を更新しました！ (${timeStr})`
+              : `最新株価を確認しました！ (${timeStr}・米市場休場中)`;
+            showToast(msg, "⚡", "bg-blue-600");
+          }
+        } else {
+          if (isManual) {
+            showToast("通信に失敗しました。電波状況をご確認ください", "⚠️", "bg-rose-600");
+          }
+        }
+      } catch (err) {
+        if (isManual) {
+          showToast("通信エラーが発生しました", "⚠️", "bg-rose-600");
+        }
+      } finally {
+        if (icon) icon.classList.remove("animate-spin");
+        isFetchingRealtime = false;
+      }
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
       switchSlot(currentSlot);
       renderSelectedStocksList();
+      // 画面を開いた瞬間に自動でリアルタイム株価を取得！
+      fetchRealtimeQuotes(false);
+      // 米国市場オープン中は30秒ごとに自動リアルタイム更新！
+      setInterval(() => {
+        if (checkUsMarketOpen()) {
+          fetchRealtimeQuotes(false);
+        }
+      }, 30000);
     });
   </script>
 </body>
