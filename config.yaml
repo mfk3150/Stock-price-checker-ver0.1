@@ -1,0 +1,64 @@
+# ==============================================================================
+# ドローダウン（最高値からの下落率）監視アラート 設定ファイル
+# ==============================================================================
+
+# 監視対象銘柄
+# ticker: Yahoo Financeのティッカーシンボル
+# name: 表示名（通知メッセージ用）
+# thresholds: アラートを発行する下落率（%）のリスト（省略時は default_thresholds が適用されます）
+targets:
+  - ticker: "ACWI"
+    name: "MSCI ACWI (全世界株 / オルカン)"
+    thresholds: [10, 15, 20, 25, 30, 35, 40, 45, 50]
+
+  - ticker: "VT"
+    name: "VT (バンガード・トータル・ワールド・ストックETF)"
+    thresholds: [10, 15, 20, 25, 30, 35, 40, 45, 50]
+
+  - ticker: "QQQ"
+    name: "Nasdaq 100 (Invesco QQQ)"
+    thresholds: [10, 15, 20, 25, 30, 35, 40, 45, 50]
+
+  - ticker: "FNGS"
+    name: "FANG+ (MicroSectors FANG+ ETN)"
+    thresholds: [10, 15, 20, 25, 30, 35, 40, 45, 50]
+
+  - ticker: "VOO"
+    name: "S&P 500 (Vanguard S&P 500 ETF)"
+    thresholds: [10, 15, 20, 25, 30, 35, 40, 45, 50]
+
+# デフォルトの下落率しきい値（%）
+default_thresholds: [15, 30, 45]
+
+# 通知設定
+notifications:
+  # コンソール（ターミナル）への出力
+  console:
+    enabled: true
+
+  # Discord Webhook 通知（推奨: スマホ・PCへ即時通知、設定簡単）
+  discord:
+    enabled: false
+    # Discordの「チャンネル設定」→「連携サービス」→「ウェブフック」からURLを取得して貼り付けます
+    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL_HERE"
+    # アラート時にメンションをつける場合（例: "@everyone" や ""）
+    mention: ""
+
+  # メール通知 (Gmail SMTPなど)
+  email:
+    enabled: false
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    sender_email: "your-email@gmail.com"
+    sender_password: "your-app-password"  # Googleの「アプリパスワード」
+    receiver_email: "your-email@gmail.com"
+
+# 動作オプション
+options:
+  # 最高値（ATH）を算出する期間 ("max" で過去全期間)
+  history_period: "max"
+  # 小刻みな値動きによる同一閾値の再通知を防ぐためのヒステリシス回復幅（%）
+  # 例: 2.0 に設定すると、15%到達後、下落率が13%未満まで回復しない限り15%は再通知されません
+  hysteresis_buffer: 2.0
+  # 定期監視ループ（--daemon）時の確認間隔（秒） デフォルト: 3600秒 (1時間)
+  check_interval_seconds: 3600
